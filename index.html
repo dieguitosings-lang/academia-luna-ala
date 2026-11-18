@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Academia Luna Ala - MDT-2025-006</title>
+<style>
+:root{--c1:#0b5d63;--c2:#0e7c86;--bg:#f4f7f7;--ok:#1b7f3b;--bad:#b3261e;--warn:#b26a00;--tx:#1b2b2d}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;font-size:19px;line-height:1.5;background:var(--bg);color:var(--tx)}
+header{background:var(--c1);color:#fff;padding:12px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+header h1{font-size:20px;margin:0}
+header .who{font-size:15px;opacity:.9}
+nav{display:flex;flex-wrap:wrap;gap:8px;padding:10px 16px;background:#dcecec}
+main{max-width:980px;margin:0 auto;padding:14px}
+.card{background:#fff;border-radius:12px;padding:16px;margin:12px 0;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+h2{margin:.2em 0 .5em;font-size:24px;color:var(--c1)}
+h3{margin:1em 0 .3em;font-size:21px;color:var(--c1)}
+button,.btn{font-size:19px;padding:14px 18px;border:0;border-radius:10px;background:var(--c2);color:#fff;cursor:pointer;margin:4px 4px 4px 0;min-height:52px}
+button.sec{background:#e3eeee;color:var(--c1);border:2px solid var(--c2)}
+button.bad{background:var(--bad)}
+button:disabled{background:#b9c4c4;color:#fff;cursor:not-allowed}
+input,select,textarea{font-size:19px;padding:12px;width:100%;border:2px solid #9bb;border-radius:8px;margin:4px 0 12px;font-family:inherit}
+textarea{min-height:170px}
+label{font-weight:bold;display:block}
+.bar{background:#d5e2e2;border-radius:10px;height:26px;overflow:hidden}
+.bar>div{background:var(--ok);height:100%;transition:width .4s}
+.tag{display:inline-block;padding:3px 12px;border-radius:14px;font-size:15px;font-weight:bold;color:#fff}
+.t-ok{background:var(--ok)}.t-bad{background:var(--bad)}.t-run{background:var(--c2)}.t-gray{background:#7a8a8c}
+.msg{padding:12px;border-radius:8px;margin:10px 0}
+.msg.err{background:#fde8e6;color:var(--bad)}.msg.info{background:#e6f2fb;color:#14507a}.msg.warn{background:#fff3df;color:#7a4a00}.msg.ok{background:#e4f5e8;color:var(--ok)}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{border:1px solid #c8d4d4;padding:6px 8px;text-align:left;vertical-align:top}
+th{background:#e3eeee}
+.scroll{overflow-x:auto}
+.avatar{width:72px;height:72px;border-radius:50%;background:var(--c2);color:#fff;font-size:30px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.lock{opacity:.55}
+#timerbar{position:sticky;top:0;z-index:20;background:#fff;border-bottom:3px solid var(--c2);padding:8px 14px;font-size:16px}
+.lectura p{margin:.6em 0}
+.lectura ul{padding-left:22px}
+.q{border:1px solid #c8d4d4;border-radius:10px;padding:12px;margin:10px 0}
+.q label{font-weight:normal;padding:8px;border-radius:8px}
+.q input{width:auto;margin:0 8px 0 0}
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;z-index:100}
+#overlay>div{background:#fff;border-radius:14px;padding:24px;max-width:420px;text-align:center}
+iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:8px}
+footer{font-size:13px;color:#566;text-align:center;padding:14px}
+.cert{background:#fff;border:10px double var(--c1);padding:30px;text-align:center;position:relative}
+.cert h1{font-size:34px;color:var(--c1);margin:.2em 0}
+.cert .name{font-size:30px;font-weight:bold;margin:.3em 0}
+.sign{display:flex;justify-content:space-around;margin-top:60px;gap:20px}
+.sign div{border-top:2px solid #000;padding-top:6px;min-width:220px;font-size:16px}
+.demo{position:fixed;top:0;left:0;right:0;background:#b26a00;color:#fff;text-align:center;font-size:14px;z-index:200}
+.small{font-size:15px;color:#455}
+@media print{
+ body{background:#fff;font-size:12pt}
+ header,nav,footer,.noprint,#timerbar{display:none!important}
+ main{max-width:none;padding:0}
+ .card{box-shadow:none;border:0;padding:0}
+ @page{size:A4 landscape;margin:12mm}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="overlay"><div><h2>¿Sigues ahí?</h2><p>No detectamos actividad. El tiempo está en pausa.</p><button onclick="resumeIdle()">Sí, sigo aquí</button></div></div>
+<script src="config.js"></script>
+<script>
+const CONTENIDO = {
+modulos: [
+{
+ id: 1,
+ titulo: "Derechos laborales de mujeres y hombres",
+ objetivo: "Que cada trabajador de la etapa conozca sus derechos y obligaciones laborales básicos y entienda que valen igual para mujeres y hombres.",
+ intro: "Todos los que trabajamos tenemos derechos: cobrar lo justo y a tiempo, estar afiliados al IESS, descansar, tener vacaciones. Estos derechos son iguales para el conserje, la persona de limpieza, el jardinero, el guardia, el administrador y el directivo. En este módulo los repasamos con palabras sencillas.",
+ video: { id: "", titulo: "Sin video confiable verificado para este módulo", canal: "—", duracion: "—", nota: "No se encontró un video de una fuente oficial ecuatoriana (Ministerio del Trabajo, OIT, ONU Mujeres) que se pueda confirmar. Se reemplaza por lectura guiada + actividad, como pide el programa. Si el Administrador encuentra uno oficial, puede cargarlo en Configuración de videos." },
+ lectura: `## 1. ¿De dónde vienen nuestros derechos?
+En Ecuador los derechos de los trabajadores están en la Constitución, en el Código del Trabajo y en otras leyes. La Constitución reconoce el trabajo como un derecho y establece que todas las personas somos iguales ante la ley y no podemos ser discriminadas (Art. 11, numeral 2). También dice que a trabajo de igual valor corresponde igual remuneración (Art. 326, numeral 4). El Código del Trabajo repite la idea: a trabajo igual, remuneración igual, sin discriminar por sexo, edad, etnia, religión, orientación sexual, estado de salud, discapacidad u otra diferencia (Art. 79).
+
+## 2. Derechos que tenemos todos
+- Contrato y afiliación: tener un contrato y estar afiliado al IESS desde el primer día de trabajo.
+- Remuneración: cobrar al menos el salario básico (o el sectorial que corresponda) y recibir el pago a tiempo.
+- Décimo tercero y décimo cuarto sueldo, y fondos de reserva desde el segundo año de trabajo.
+- Jornada: la jornada máxima es de 8 horas diarias y 40 semanales. Lo que pasa de ahí es sobretiempo y se paga con recargo.
+- Descanso y vacaciones: dos días de descanso a la semana y 15 días de vacaciones pagadas al año (más días según la antigüedad).
+- Protección de la maternidad y la paternidad: licencia de maternidad de 12 semanas y licencia de paternidad. Una mujer embarazada no puede ser despedida por estar embarazada.
+- Un trabajo seguro: el empleador debe cuidar tu seguridad y salud (por ejemplo, entregar implementos de protección al personal de limpieza y jardinería).
+- Trato digno: nadie puede ser insultado, humillado ni maltratado en el trabajo.
+
+Importante: los montos y plazos exactos cambian. Para cifras concretas (salario básico del año, días de licencia por casos especiales) se consulta siempre el Ministerio del Trabajo o un abogado laboral.
+
+## 3. Derechos de mujeres y hombres: iguales, pero con necesidades distintas
+Igualdad no significa tratar a todos exactamente igual en todo, sino darle a cada persona las mismas oportunidades. Una mujer embarazada necesita licencia y cuidados; un padre necesita tiempo para acompañar a su hijo recién nacido. Cuando la ley protege la maternidad, no está dando un "privilegio": está evitando que una mujer pierda su trabajo por tener un hijo.
+
+## 4. Obligaciones de las personas trabajadoras
+Los derechos vienen con responsabilidades: cumplir el horario, cuidar los bienes de la etapa, tratar con respeto a vecinos y compañeros, y seguir las instrucciones razonables del empleador. Respetar al compañero o compañera también es parte del trabajo.
+
+## 5. La Asociación como empleadora
+La Asociación de Residentes es la empleadora. Su representante legal es el Presidente. El Administrador ejecuta el día a día, y la contadora lleva los registros. Esto significa que si algo no se cumple (un pago, una afiliación, un implemento de seguridad), el trabajador puede decirlo sin miedo y la Asociación debe corregirlo. Si no se resuelve, el trabajador puede acudir al Ministerio del Trabajo.
+
+## 6. Por qué se hace esta capacitación
+La Ley Orgánica para la Igualdad Salarial entre Mujeres y Hombres obliga a los empleadores a capacitar cada año, mínimo 40 horas, a todo su personal y a sus máximas autoridades. Por eso el Presidente y el directorio también estudian aquí.`,
+ actividad: {
+  titulo: "Mi puesto, mis derechos",
+  instruccion: "Piensa en tu puesto en la etapa. Responde con tus palabras (no hay respuestas malas, hay respuestas honestas):\n1) Escribe 5 derechos laborales que ya se cumplen en tu trabajo.\n2) Escribe 2 derechos sobre los que tienes dudas y quisieras preguntar.\n3) Mira estos tres puestos: conserje, personal de limpieza y jardinería. Escribe qué tiene de parecido y qué tiene de distinto cada uno (horario, esfuerzo físico, responsabilidad, riesgos).\n4) ¿Crees que el hombre o la mujer que ocupa cada puesto debería ganar distinto por ser hombre o mujer? Explica por qué sí o por qué no."
+ },
+ foro: ["¿Qué derecho laboral crees que más desconoce la gente en nuestra etapa y por qué?", "¿Alguna vez un compañero o compañera no supo que tenía un derecho? ¿Qué pasó? (sin nombres)", "¿Cómo podemos asegurar que el personal de limpieza y jardinería tenga sus implementos de seguridad?", "¿Qué obligaciones tenemos las personas trabajadoras para que la convivencia en la etapa funcione?", "¿Qué debería hacer la Asociación para que todos conozcan sus derechos?"],
+ quiz: [
+  { q: "La jornada máxima ordinaria de trabajo en Ecuador es de:", o: ["6 horas diarias", "8 horas diarias y 40 semanales", "10 horas diarias", "12 horas diarias"], c: 1 },
+  { q: "¿Desde cuándo debe estar afiliado al IESS un trabajador en relación de dependencia?", o: ["Desde el primer día de trabajo", "Después de 3 meses", "Después de un año", "Solo si lo pide"], c: 0 },
+  { q: "Según la Constitución, a trabajo de igual valor corresponde:", o: ["Distinta remuneración según el sexo", "Igual remuneración", "Remuneración según la antigüedad únicamente", "Lo que decida el jefe"], c: 1 },
+  { q: "Una trabajadora embarazada:", o: ["Puede ser despedida por estar embarazada", "Debe renunciar al sexto mes", "Tiene licencia de maternidad y protección contra el despido por su embarazo", "No tiene derechos hasta dar a luz"], c: 2 },
+  { q: "Las horas trabajadas después de la jornada ordinaria se llaman:", o: ["Vacaciones", "Sobretiempo y se pagan con recargo", "Permiso", "Voluntariado"], c: 1 },
+  { q: "¿Quién es el representante legal de la Asociación ante el Ministerio del Trabajo?", o: ["El Presidente", "El conserje", "El vecino más antiguo", "La contadora"], c: 0 },
+  { q: "¿Cuántos días de vacaciones pagadas al año tiene como mínimo un trabajador?", o: ["5 días", "10 días", "15 días", "30 días"], c: 2 },
+  { q: "El Código del Trabajo prohíbe pagar distinto a personas que hacen el mismo trabajo por razón de:", o: ["Su sexo, etnia, religión u orientación sexual", "Haber trabajado más horas", "Tener más experiencia comprobada", "Cumplir mejor las metas del cargo"], c: 0 },
+  { q: "Si el empleador no cumple un derecho y no lo corrige, el trabajador puede:", o: ["Aguantar en silencio", "Acudir al Ministerio del Trabajo", "Dejar de ir a trabajar sin avisar", "Pedirle a un vecino que lo resuelva"], c: 1 },
+  { q: "¿Cuál es una obligación de la persona trabajadora?", o: ["Tratar con respeto a vecinos y compañeros", "Decidir su propio horario", "Quedarse con los bienes de la etapa", "Ignorar las instrucciones razonables del empleador"], c: 0 }
+ ]
+},
+{
+ id: 2,
+ titulo: "Igualdad de género",
+ objetivo: "Entender qué es el género, cómo los estereotipos limitan a mujeres y hombres, y qué podemos cambiar en el trabajo diario de la etapa.",
+ intro: "Igualdad de género significa que mujeres y hombres tengan los mismos derechos, las mismas oportunidades y el mismo respeto. No es una pelea entre hombres y mujeres: es un trato justo para todos. Aquí lo vemos con ejemplos del día a día en una urbanización.",
+ video: { id: "nbeei5ukWfs", titulo: "ONU Mujeres Ecuador", canal: "ONU Mujeres (canal por verificar)", duracion: "No verificada", nota: "Video institucional de ONU Mujeres en Ecuador (presenta su trabajo en el país). El título coincide con lo encontrado en YouTube, pero NO se pudo confirmar el canal exacto ni la duración. El Administrador debe abrirlo y verificarlo antes del 23/11/2026; si no sirve, desactívelo en Configuración de videos y la lección se hará con lectura + actividad." },
+ lectura: `## 1. Sexo y género: ¿qué diferencia hay?
+El sexo tiene que ver con lo biológico (hombre, mujer). El género son las ideas que la sociedad pone sobre lo que "debe" hacer o ser un hombre o una mujer. Por ejemplo, creer que "cuidar niños es de mujeres" o que "mandar es de hombres" no es biología: es costumbre. Y las costumbres se pueden cambiar.
+
+## 2. Los estereotipos en el trabajo
+Un estereotipo es una idea fija sobre un grupo. En una urbanización puede verse así:
+- Pensar que la limpieza es "trabajo de mujeres" y la jardinería o la seguridad "trabajo de hombres".
+- Pensar que una mujer no puede ser administradora o guardia, o que un hombre no puede cuidar a sus hijos y pedir permiso para eso.
+- Pensar que una mujer "se pone sentimental" y un hombre "no debe llorar ni pedir ayuda".
+Estos estereotipos hacen daño a todos. Reducen las oportunidades de las mujeres y también presionan a los hombres a no cuidar de su familia ni de su salud.
+
+## 3. Brecha y segregación
+Cuando los puestos "de mujeres" suelen pagar menos que los "de hombres" aunque exijan responsabilidad parecida, hablamos de segregación y de brecha salarial. La Ley Orgánica para la Igualdad Salarial entre Mujeres y Hombres existe justamente para corregir esto en las empresas y organizaciones empleadoras.
+
+## 4. Trabajo de cuidado
+El trabajo no pagado de cuidar niños, adultos mayores o enfermos en casa recae sobre todo en las mujeres. Muchas llegan cansadas al trabajo remunerado después de una "segunda jornada" en casa. Si los hombres comparten el cuidado, las mujeres tienen más tiempo para estudiar, descansar o crecer en su empleo, y los hombres se acercan más a sus hijos.
+
+## 5. Lenguaje y trato diario
+La igualdad se nota en cosas pequeñas: cómo nos hablamos, a quién consultamos, a quién se le asignan las tareas pesadas, quién habla en las reuniones, qué chistes se cuentan. Un chiste que humilla a las mujeres (o a los hombres) también es parte del problema.
+
+## 6. ¿Qué podemos hacer en la etapa?
+- Asignar tareas según capacidades y necesidades del puesto, no según el sexo.
+- Dar a mujeres y hombres las mismas oportunidades de capacitarse y de ascender.
+- Respetar los permisos por cuidado de hijos y por salud, para ambos sexos.
+- Corregir con respeto cuando alguien haga un comentario sexista.
+- Revisar que los sueldos de puestos comparables sean justos (lo vemos en el Módulo 4).`,
+ actividad: {
+  titulo: "Cazando estereotipos en la etapa",
+  instruccion: "Responde con tus palabras:\n1) Escribe 3 frases que hayas escuchado en la etapa o en tu trabajo que muestren un estereotipo de género (por ejemplo: \"eso es cosa de mujeres\"). No pongas nombres.\n2) Para cada frase, escribe cómo la dirías de forma respetuosa y sin estereotipo.\n3) Revisa las tareas de la etapa (limpieza, jardinería, seguridad, atención, administración). ¿Alguna se asigna casi siempre a hombres o casi siempre a mujeres? ¿Hay una razón real o es costumbre?\n4) Propón una acción simple para que la etapa trate mejor a mujeres y hombres."
+ },
+ foro: ["¿Qué tareas de la etapa se consideran 'de hombres' o 'de mujeres'? ¿Tiene sentido?", "¿Cómo afectan los estereotipos a los hombres? Da un ejemplo.", "¿Qué dificultades tiene una persona trabajadora que además cuida hijos o familiares? ¿Cómo podría ayudar la etapa?", "¿Qué haces tú cuando escuchas un chiste o comentario que humilla a alguien por ser hombre o mujer?", "¿Qué cambio concreto de igualdad de género pueden pedir los vecinos y el directorio a la Asociación?"],
+ quiz: [
+  { q: "El género se refiere a:", o: ["Solo a diferencias biológicas", "Las ideas sociales sobre lo que deben hacer o ser hombres y mujeres", "El sueldo de una persona", "El puesto de trabajo"], c: 1 },
+  { q: "Un estereotipo de género es:", o: ["Una ley", "Una idea fija sobre cómo deben ser o actuar hombres y mujeres", "Un derecho laboral", "Un tipo de contrato"], c: 1 },
+  { q: "La igualdad de género busca que:", o: ["Las mujeres tengan más derechos que los hombres", "Los hombres tengan más derechos que las mujeres", "Mujeres y hombres tengan los mismos derechos y oportunidades", "Nadie tenga derechos"], c: 2 },
+  { q: "Pensar que 'la limpieza es solo trabajo de mujeres' es un ejemplo de:", o: ["Estereotipo de género", "Derecho laboral", "Jornada ordinaria", "Contrato indefinido"], c: 0 },
+  { q: "La Ley Orgánica para la Igualdad Salarial entre Mujeres y Hombres busca:", o: ["Subir todos los sueldos al doble", "Garantizar retribución sin discriminación por sexo", "Eliminar el trabajo de limpieza", "Reducir las vacaciones"], c: 1 },
+  { q: "El trabajo de cuidado no pagado en el hogar recae principalmente en:", o: ["Los hombres", "Las mujeres", "Los niños", "Los jefes"], c: 1 },
+  { q: "Para asignar una tarea en la etapa se debe considerar:", o: ["El sexo de la persona", "Las capacidades y las necesidades del puesto", "La simpatía personal", "El apellido"], c: 1 },
+  { q: "Un chiste que humilla a las mujeres en el lugar de trabajo:", o: ["Es solo un chiste y no importa", "Contribuye a un ambiente de desigualdad y debe corregirse con respeto", "Es obligatorio reírse", "Solo importa si hay un jefe presente"], c: 1 },
+  { q: "Compartir el cuidado de los hijos entre mujeres y hombres ayuda a:", o: ["Que las mujeres tengan más tiempo para estudiar y crecer en su empleo", "Que nadie cuide a los hijos", "Que los hombres no trabajen", "Que baje el sueldo"], c: 0 },
+  { q: "¿Cuál acción favorece la igualdad en la etapa?", o: ["Dar las mismas oportunidades de capacitación a mujeres y hombres", "Pagar menos a quien lleva menos tiempo hablando", "Asignar tareas por el sexo de la persona", "No permitir permisos por cuidado de hijos"], c: 0 }
+ ]
+},
+{
+ id: 3,
+ titulo: "Erradicación de violencia y no discriminación en el centro de trabajo",
+ objetivo: "Reconocer la violencia, el acoso y la discriminación en el trabajo, saber qué hacer si ocurren y conocer el protocolo que la etapa debe tener.",
+ intro: "Nadie debe ser maltratado, acosado ni excluido en su trabajo. Esto incluye gritos, burlas, amenazas, tocamientos, insinuaciones sexuales y trato desigual por ser mujer, por la edad, la discapacidad, el origen o la orientación sexual. Aquí aprendemos a reconocerlo y a actuar.",
+ video: { id: "E0rfyQDV-K4", titulo: "Más de 8.400 personas unidas contra la violencia laboral | Ministerio del Trabajo + PREVIMUJER", canal: "Canal Libre de Violencia", duracion: "No verificada", nota: "El título corresponde a una pieza del Ministerio del Trabajo con el programa PREVIMUJER (subida el 28/03/2025). El canal que la publicó es 'Canal Libre de Violencia', NO el canal oficial del Ministerio; y no se pudo confirmar la duración. El Administrador debe verificarlo antes del 23/11/2026. También existe como alternativa de ONU Mujeres: '#25N Violencia Basada en Género | Programa completo' (canal ONU Mujeres América Latina y el Caribe, https://www.youtube.com/watch?v=vm_uKtUNyPw), de alcance regional y duración no verificada." },
+ lectura: `## 1. ¿Qué es la violencia en el trabajo?
+Es cualquier conducta que cause daño físico, psicológico, sexual o económico a una persona en su lugar de trabajo o por razón de su trabajo. El Convenio 190 de la OIT, una norma internacional, habla de "violencia y acoso" en el mundo del trabajo y señala que afecta de forma especial a las mujeres.
+
+## 2. Formas más comunes
+- Violencia verbal: gritos, insultos, apodos humillantes, burlas.
+- Violencia psicológica o acoso laboral: amenazas, aislar a alguien, quitarle funciones sin razón, vigilarlo todo el tiempo, desprestigiarlo ante los demás.
+- Acoso sexual: comentarios sobre el cuerpo, insinuaciones, mensajes no deseados, tocamientos, o condicionar un beneficio laboral a un favor sexual.
+- Violencia física: empujones, golpes, agresiones.
+- Violencia económica: retener el pago, descontar sin autorización, impedir que alguien reciba lo que le corresponde.
+
+## 3. Discriminación
+Discriminar es tratar peor a una persona por una característica suya: sexo, edad, etnia, religión, discapacidad, orientación sexual, estado de salud, ser migrante u otras. La Constitución prohíbe la discriminación y el Código del Trabajo también. En la etapa podría verse como no contratar a alguien por tener hijos pequeños, dar peores turnos a una persona por su origen, o excluir a un compañero por su orientación sexual.
+
+## 4. Lo que dicen las leyes
+Ecuador cuenta, entre otras normas, con la Ley Orgánica Integral para Prevenir y Erradicar la Violencia contra las Mujeres y con reformas al Código del Trabajo para prevenir el acoso laboral. El Ministerio del Trabajo ha emitido normas para que los empleadores tengan un protocolo interno de prevención y atención. Importante: el Administrador y el directorio deben verificar con el Ministerio del Trabajo cuál es el acuerdo ministerial vigente y qué exige exactamente al sector privado, porque esta capacitación no reemplaza la lectura de la norma.
+
+## 5. Si me pasa a mí
+- Anótalo: fecha, hora, qué pasó, quién lo vio. Guarda mensajes o fotos.
+- No te culpes: la responsabilidad es de quien agrede.
+- Cuéntalo a una persona de confianza y a la persona designada por la Asociación (por ejemplo, el Administrador o un directivo que no esté involucrado).
+- Si quien agrede es el propio Administrador o un directivo, debes poder acudir a otra persona de la directiva.
+- Puedes acudir al Ministerio del Trabajo y, si hay delito, a la Fiscalía. Si estás en peligro inmediato, llama al 911.
+
+## 6. Si lo veo o me lo cuentan
+Escucha sin juzgar, no obligues a la persona a confrontar a quien la agrede, no divulgues lo que te contó y avisa a la persona responsable. Reservar los datos protege a la víctima.
+
+## 7. Qué debe tener la etapa
+Una etapa empleadora debería tener por escrito: una declaración de cero tolerancia, cómo se presenta una queja, quién la recibe, plazos, medidas de protección para la persona que reclama, y la garantía de que reclamar no traerá represalias. Esto se trabaja en la actividad del módulo.`,
+ actividad: {
+  titulo: "Casos y protocolo de la etapa",
+  instruccion: "Parte A. Lee estos casos (inventados, para practicar) y escribe qué es cada uno y qué se debería hacer:\n  Caso 1: Un directivo le dice a una trabajadora de limpieza, delante de otros, que \"está gorda y que así nadie la va a querer\".\n  Caso 2: Un jardinero no recibe sus guantes ni protección y su jefe le dice que si se queja \"hay muchos que quieren su puesto\".\n  Caso 3: A una trabajadora le piden que se quede a solas y le insinúan que, si cede, mejorarán sus turnos.\n  Caso 4: Un compañero es excluido de las reuniones y le ponen apodos por su orientación sexual.\n\nParte B. Redacta un borrador de protocolo para nuestra etapa con estos 5 puntos: 1) declaración de cero tolerancia, 2) a quién se presenta la queja (y a quién si el denunciado es esa persona), 3) cómo se protege a quien reclama, 4) plazos para responder, 5) cómo se guarda la información en reserva."
+ },
+ foro: ["¿Qué conductas de las vistas hoy crees que pasan sin que se note en las etapas residenciales?", "¿Por qué muchas personas no denuncian? ¿Cómo hacemos que se sientan seguras para hacerlo?", "¿A quién debería acudir un trabajador si el agresor es el propio administrador o un directivo?", "¿Qué responsabilidad tienen los vecinos en el trato al personal (conserje, limpieza, guardianía)?", "¿Qué debería incluir el protocolo de nuestra etapa para que realmente funcione?"],
+ quiz: [
+  { q: "Condicionar un beneficio laboral (turnos, ascenso) a un favor sexual es:", o: ["Acoso sexual", "Un acuerdo normal", "Una forma de motivar", "Permitido si hay confianza"], c: 0 },
+  { q: "Si una persona sufre violencia en el trabajo, lo primero recomendado es:", o: ["Quedarse callada", "Anotar lo ocurrido y guardar pruebas, y contarlo a una persona responsable", "Responder con violencia", "Renunciar sin decir nada"], c: 1 },
+  { q: "Las burlas y apodos humillantes de forma repetida son un ejemplo de:", o: ["Cariño", "Violencia verbal / acoso psicológico", "Jornada ordinaria", "Derecho de expresión"], c: 1 },
+  { q: "La discriminación es:", o: ["Tratar peor a alguien por una característica personal", "Una forma de ahorrar costos", "Un derecho del empleador", "Un tipo de contrato"], c: 0 },
+  { q: "Si el agresor es el propio administrador, el trabajador debe poder:", o: ["No acudir a nadie", "Acudir a otra persona de la directiva o al Ministerio del Trabajo", "Esperar a que cambie", "Pedirle permiso al agresor"], c: 1 },
+  { q: "Cuando alguien te cuenta que sufre acoso, lo correcto es:", o: ["Contarlo a todo el mundo", "Escuchar sin juzgar y mantener la reserva", "Decirle que exagera", "Obligarlo a pelear"], c: 1 },
+  { q: "¿Cuál NO es una forma de violencia en el trabajo?", o: ["Retener el pago sin razón", "Amenazar con despedir por reclamar", "Asignar tareas según el puesto", "Tocamientos no deseados"], c: 2 },
+  { q: "Un buen protocolo de la etapa debe garantizar:", o: ["Que se castigue al que reclama", "Que no haya represalias contra quien reclama", "Que todo se haga público", "Que nadie pueda quejarse"], c: 1 },
+  { q: "En peligro inmediato, ¿a qué número se debe llamar en Ecuador?", o: ["911", "100", "200", "No hay número"], c: 0 },
+  { q: "Excluir a un compañero de reuniones por su orientación sexual es:", o: ["Discriminación", "Un derecho del grupo", "Una política de horarios", "Un descanso"], c: 0 }
+ ]
+},
+{
+ id: 4,
+ titulo: "Trabajo de igual valor y equidad salarial",
+ objetivo: "Comprender cómo se compara el valor de distintos puestos para pagar sin discriminar y preparar una acción de sensibilización con evidencia para la etapa.",
+ intro: "A veces dos puestos son distintos (por ejemplo conserjería y limpieza) pero exigen un valor parecido de responsabilidad, esfuerzo y condiciones. La ley dice que, si el valor es igual, la remuneración no puede ser distinta solo por quién ocupa el puesto. Aquí aprendemos a comparar con criterios claros.",
+ video: { id: "", titulo: "Sin video confiable verificado para este módulo", canal: "—", duracion: "—", nota: "Los videos encontrados sobre igualdad salarial eran de estudios jurídicos, medios o de otros países (España, Brasil, Colombia), que el programa prohíbe usar. Se reemplaza por lectura guiada + actividad. Si el Administrador encuentra una pieza oficial del Ministerio del Trabajo o de la OIT sobre trabajo de igual valor, puede cargarla en Configuración de videos." },
+ lectura: `## 1. Igual trabajo vs. trabajo de igual valor
+Igual trabajo es cuando dos personas hacen lo mismo (dos conserjes en el mismo turno). Trabajo de igual valor es cuando los puestos son distintos pero valen parecido para la organización. La Constitución habla de "trabajo de igual valor" (Art. 326, numeral 4) y la ley de igualdad salarial desarrolla esta idea.
+
+## 2. ¿Cómo se compara el valor de un puesto?
+Un método común, que usa la OIT en sus guías, compara cuatro factores:
+- Conocimientos y habilidades: estudios, experiencia, cursos que exige el puesto.
+- Esfuerzo: físico, mental y emocional (cargar peso, atender reclamos, estar de pie muchas horas).
+- Responsabilidad: por personas, dinero, bienes, seguridad o decisiones (por ejemplo, controlar el acceso a la etapa).
+- Condiciones de trabajo: riesgos, sol, químicos, turnos nocturnos, ruido.
+Se describe cada puesto, se le da una calificación por factor y se comparan.
+
+## 3. Un ejemplo sencillo (inventado)
+Puesto A (conserjería): responsabilidad alta (atiende a vecinos, controla llaves y áreas comunes), esfuerzo medio, condiciones medias. Puesto B (limpieza de áreas comunes): esfuerzo físico alto, condiciones con químicos y sol, responsabilidad media. Los puestos son distintos, pero al sumar los factores pueden tener un valor parecido. Si el puesto A lo ocupan casi siempre hombres y el B casi siempre mujeres, y el B paga menos sin una razón objetiva, hay una alerta de posible discriminación salarial.
+
+## 4. Razones que SÍ justifican diferencias
+Pueden existir diferencias objetivas: antigüedad, formación comprobada, desempeño medible, más responsabilidades o más horas. Lo que NO es válido es justificar una diferencia por el sexo, la edad, el origen o por "costumbre".
+
+## 5. Pasos para revisar la equidad en la etapa
+1. Hacer la lista de puestos y personas (sin juzgar todavía).
+2. Escribir una descripción corta de cada puesto.
+3. Calificar los cuatro factores con un criterio común.
+4. Comparar las remuneraciones de los puestos que salen parecidos.
+5. Pedir explicación objetiva de cada diferencia.
+6. Corregir lo que no se pueda justificar, y dejar constancia por escrito.
+Esto debe hacerlo la Asociación con asesoría de la contadora y, si es necesario, un abogado laboral. Esta capacitación enseña la idea; no reemplaza ese análisis.
+
+## 6. Otras prácticas de equidad
+- Publicar con claridad los criterios de pago por cargo.
+- Dar las mismas oportunidades de capacitación y ascenso.
+- Facilitar permisos de cuidado para mujeres y hombres.
+- Revisar con regularidad que los cambios de sueldo se basen en criterios claros.
+
+## 7. La acción de sensibilización (Art. 4)
+Además de las 40 horas, la normativa pide al menos una acción de sensibilización con evidencia. En nuestra etapa puede ser, por ejemplo, una charla breve abierta para los vecinos y una cartelera informativa sobre igualdad y no discriminación. La evidencia puede ser fotos, lista de asistentes firmada y el material usado. En la actividad de este módulo la planificamos.`,
+ actividad: {
+  titulo: "Comparo puestos y planifico la sensibilización",
+  instruccion: "Parte A. Con los puestos de la etapa (conserjería, limpieza, jardinería, seguridad, administración), llena una tabla en el texto: para cada puesto escribe Conocimientos, Esfuerzo, Responsabilidad y Condiciones (bajo / medio / alto). Luego escribe qué puestos salen parecidos en valor y si crees que las remuneraciones deben revisarse (sin poner montos personales).\n\nParte B. Planifica una acción de sensibilización para la etapa: 1) qué harán (charla, cartelera, reunión), 2) fecha propuesta, 3) quién la dirige, 4) a quiénes invitan, 5) qué evidencia guardarán (fotos, lista de asistentes, material).\n\nParte C. Escribe 3 compromisos concretos que la etapa asumirá para mejorar la equidad en el próximo año."
+ },
+ foro: ["¿Qué puestos de la etapa crees que valen parecido aunque sean distintos? ¿Por qué?", "¿Qué diferencias de remuneración sí se pueden justificar y cuáles no?", "¿Qué dificultades habría para revisar los sueldos con criterios claros en una asociación pequeña?", "¿Qué acción de sensibilización sería más útil para los vecinos de la etapa?", "¿Cómo medirías el próximo año que la etapa mejoró en equidad?"],
+ quiz: [
+  { q: "'Trabajo de igual valor' significa:", o: ["Que los puestos son siempre idénticos", "Que puestos distintos pueden valer parecido por conocimientos, esfuerzo, responsabilidad y condiciones", "Que todos ganan lo mismo siempre", "Que solo importa la antigüedad"], c: 1 },
+  { q: "¿Cuál NO es un factor para comparar el valor de un puesto?", o: ["Esfuerzo", "Responsabilidad", "Condiciones de trabajo", "El sexo de quien lo ocupa"], c: 3 },
+  { q: "Una diferencia salarial entre dos puestos de valor parecido puede justificarse por:", o: ["Que uno lo ocupe una mujer", "Una razón objetiva, como mayor antigüedad o formación comprobada", "La costumbre", "La simpatía"], c: 1 },
+  { q: "Si un puesto ocupado mayormente por mujeres paga menos que uno de valor parecido ocupado mayormente por hombres, esto es:", o: ["Una alerta que debe revisarse", "Normal siempre", "Obligatorio", "Un premio"], c: 0 },
+  { q: "¿Qué es un ejemplo de 'condiciones de trabajo' al comparar puestos?", o: ["Exposición a químicos o al sol", "El apellido", "La edad", "El género"], c: 0 },
+  { q: "La acción de sensibilización adicional debe tener:", o: ["Evidencia, como fotos, lista de asistentes y material", "Ninguna evidencia", "Solo un chat", "Solo una promesa verbal"], c: 0 },
+  { q: "La Constitución establece que a trabajo de igual valor corresponde:", o: ["Remuneración distinta", "Igual remuneración", "Sin remuneración", "Remuneración voluntaria"], c: 1 },
+  { q: "Para revisar la equidad en la etapa, un buen primer paso es:", o: ["Despedir a alguien", "Hacer la lista de puestos y describir cada uno", "Bajar sueldos", "No hacer nada"], c: 1 },
+  { q: "¿Quién debe revisar la equidad salarial en la etapa?", o: ["La Asociación, con apoyo de la contadora y, si hace falta, un abogado laboral", "Solo un vecino", "Nadie", "Solo el conserje"], c: 0 },
+  { q: "¿Cuál es una buena práctica de equidad?", o: ["Publicar con claridad los criterios de pago por cargo", "Mantener los criterios en secreto", "Pagar según el sexo", "Evitar toda capacitación"], c: 0 }
+ ]
+}
+]
+};
+if (typeof module !== 'undefined') module.exports = CONTENIDO;
+
+</script>
+<script>
+"use strict";
+/* ===================== CONFIGURACIÓN ===================== */
+const DEMO = location.hash.indexOf('demo') >= 0;           // #demo = ensayo, no cuenta como evidencia
+const PFX = DEMO ? 'lunaala_demo_' : 'lunaala_';
+const START = '2026-11-23';                                 // lunes (4 semanas completas L-V)
+const MIN_LESSON = DEMO ? 1 : 120;                          // minutos reales mínimos por lección (2 h)
+const IDLE_MS = DEMO ? 30000 : 10 * 60 * 1000;              // 10 min sin interacción => pausa
+const LESSONS = ['Video', 'Lectura', 'Actividad', 'Foro', 'Evaluación'];
+const CARGOS = ['Administrador', 'Conserje', 'Limpieza', 'Jardinería', 'Seguridad', 'Presidente', 'Directivo', 'Contadora'];
+const ROLES = ['estudiante', 'administrador', 'contadora', 'presidente'];
+const ASOC = 'Asociación de Residentes VillaClub - Etapa Luna Ala (La Aurora, Daule, Guayas)';
+const LEGAL = 'Esta plataforma registra tiempo real. La información reportada es de exclusiva responsabilidad del empleador según Art. 5 MDT-2025-006.';
+const MODS = CONTENIDO.modulos;
+
+/* ===================== CONEXIÓN CON GOOGLE SHEETS (Apps Script) ===================== */
+const CFG = window.LUNA_CONFIG || {};
+const API = DEMO ? '' : (CFG.apiUrl || '');
+const ONLINE = !!API;
+let myHash = null, srvAdmin = null, srvErr = false, flushing = false, syncErr = '', queue = [];
+try { queue = JSON.parse(localStorage.getItem(PFX + 'q') || '[]'); } catch (e) { queue = []; }
+function saveQ() { try { localStorage.setItem(PFX + 'q', JSON.stringify(queue)); } catch (e) { } updSync(); }
+async function api(action, body) {
+  const r = await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(Object.assign({ action: action }, body || {})) });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+function enq(ev) {
+  if (!ONLINE || !me) return;
+  ev.by = me;
+  if (ev.k) queue = queue.filter(x => !(x.by === me && x.k === ev.k));
+  queue.push(ev); saveQ();
+}
+async function flush() {
+  if (!ONLINE || !me || !myHash || flushing) return true;
+  const mine = queue.filter(x => x.by === me); if (!mine.length) { updSync(); return true; }
+  flushing = true;
+  try {
+    const r = await api('events', { ced: me, hash: myHash, events: mine });
+    if (!r.ok) throw new Error(r.error || 'error');
+    queue = queue.filter(x => mine.indexOf(x) < 0); syncErr = ''; saveQ(); flushing = false; return true;
+  } catch (e) { flushing = false; syncErr = String(e.message || e); updSync(); return false; }
+}
+function updSync() {
+  const el = document.getElementById('sync'); if (!el) return;
+  if (!ONLINE) { el.textContent = 'Modo local (un solo equipo)'; return; }
+  const n = queue.filter(x => x.by === me).length;
+  el.textContent = n ? '⚠ Pendiente de enviar: ' + n + (syncErr ? ' (sin conexión)' : '') : '✔ Guardado en Google Sheets';
+}
+setInterval(function () { flush(); }, 20000);
+function enqSesion(c) {
+  if (!c || c.entry.seg < 1) return;
+  enq({ k: 's|' + c.entry.ini, t: 'sesion', id: me + '|' + c.entry.ini, m: c.m, l: c.l, intento: c.entry.intento || 1, fecha: c.entry.fecha, ini: c.entry.ini, fin: c.entry.fin, seg: c.entry.seg, ip: c.entry.ip, dev: c.entry.dev });
+}
+function pageHide() {
+  if (cur) { cur.entry.fin = new Date().toISOString(); save(); enqSesion(cur); }
+  if (ONLINE && me && myHash) {
+    const mine = queue.filter(x => x.by === me);
+    if (mine.length && navigator.sendBeacon) { try { navigator.sendBeacon(API, new Blob([JSON.stringify({ action: 'events', ced: me, hash: myHash, events: mine })], { type: 'text/plain;charset=UTF-8' })); } catch (e) { } }
+  }
+}
+function forumFrom(rows) { return (rows || []).map(r => ({ m: +r.modulo, ced: r.cedula, nombre: r.nombre, cargo: r.cargo, texto: r.texto, fecha: r.fecha })).sort((a, b) => a.fecha < b.fecha ? -1 : 1); }
+function buildFrom(res) {
+  const users = {};
+  (res.usuarios || []).forEach(r => {
+    const u = newUser({ nombre: r.nombre, cedula: r.cedula, cargo: r.cargo, contacto: r.contacto, rol: r.rol, creado: r.creado, lastLogin: r.ultimo || null, aprobado: !!r.aprobado, aprobadoPor: r.aprobado_por, aprobadoFecha: r.aprobado_fecha, codigo: r.codigo || '' });
+    try { u.avatar = localStorage.getItem(PFX + 'av_' + r.cedula) || ''; } catch (e) { }
+    users[r.cedula] = u;
+  });
+  (res.lecciones || []).forEach(r => { const u = users[r.cedula]; if (!u) return; const p = prog(u, +r.modulo, +r.leccion); p.done = r.done === 'SI'; p.intento = +r.intento || 1; p.resp = r.apuntes || ''; });
+  (res.sesiones || []).forEach(r => { const u = users[r.cedula]; if (!u) return; const p = prog(u, +r.modulo, +r.leccion); p.logs.push({ fecha: r.fecha, ini: r.inicio, fin: r.fin, seg: +r.segundos || 0, ip: r.ip, dev: r.dispositivo, intento: +r.intento || 1, demo: false }); });
+  Object.values(users).forEach(u => Object.values(u.progress).forEach(p => { p.secs = p.logs.filter(g => (g.intento || 1) === (p.intento || 1)).reduce((a, g) => a + g.seg, 0); }));
+  (res.evaluaciones || []).slice().sort((a, b) => (+a.intento_n) - (+b.intento_n)).forEach(r => { const u = users[r.cedula]; if (!u) return; const q = u.quiz[+r.modulo] || { best: 0, passed: false, intentos: [] }; q.intentos.push({ fecha: r.fecha, nota: +r.nota }); q.best = Math.max(q.best, +r.nota); if (r.aprobado === 'SI') q.passed = true; u.quiz[+r.modulo] = q; });
+  (res.actividades || []).forEach(r => { const u = users[r.cedula]; if (u) u.act[+r.modulo] = { texto: r.texto, fecha: r.fecha }; });
+  db.users = users;
+}
+function applyLogin(r) {
+  buildFrom({ usuarios: [r.user], lecciones: r.data.lecciones, sesiones: r.data.sesiones, evaluaciones: r.data.evaluaciones, actividades: r.data.actividades });
+  db.forum = forumFrom(r.foro); db.att = {}; db.settings.videos = (r.config && r.config.videos) || {}; save();
+}
+async function refreshMe() {
+  if (!ONLINE || !me || !myHash || cur) return;
+  try { await flush(); const r = await api('me', { ced: me, hash: myHash }); if (r.ok) applyLogin(r); } catch (e) { }
+}
+async function refreshAll() {
+  if (!ONLINE || !me || !myHash) return;
+  try {
+    await flush(); const r = await api('all', { ced: me, hash: myHash });
+    if (r.ok) { buildFrom(r); db.att = {}; (r.asistencia || []).forEach(a => { if (a.validada === 'SI') { db.att[a.cedula] = db.att[a.cedula] || {}; db.att[a.cedula][a.fecha] = true; } }); db.forum = forumFrom(r.foro); db.settings.videos = (r.config && r.config.videos) || {}; save(); }
+  } catch (e) { }
+}
+async function refreshForum(m) {
+  if (!ONLINE || !me) return;
+  try { const r = await api('foro', { ced: me, hash: myHash }); if (r.ok) { db.forum = forumFrom(r.foro); const b = document.getElementById('forumlist'); if (b) b.innerHTML = forumList(m); } } catch (e) { }
+}
+
+/* sesiones: 20 días hábiles desde START */
+const SESSIONS = (function () {
+  const out = []; const d = new Date(START + 'T12:00:00');
+  while (out.length < 20) { const w = d.getDay(); if (w !== 0 && w !== 6) out.push(ymd(d)); d.setDate(d.getDate() + 1); }
+  return out;
+})();
+function ymd(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function today() { return ymd(new Date()); }
+function fdate(s) { if (!s) return '—'; const p = s.slice(0, 10).split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+function ftime(iso) { return iso ? new Date(iso).toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—'; }
+function fdt(iso) { return iso ? fdate(ymd(new Date(iso))) + ' ' + ftime(iso) : '—'; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function sesDate(m, l) { return SESSIONS[(m - 1) * 5 + l]; }
+function key(m, l) { return m + '-' + l; }
+
+/* ===================== DATOS ===================== */
+let db = load();
+function load() {
+  try { const r = localStorage.getItem(PFX + 'db'); if (r) return JSON.parse(r); } catch (e) { }
+  return { users: {}, forum: [], att: {}, settings: { videos: {} }, creado: new Date().toISOString() };
+}
+function save() { try { localStorage.setItem(PFX + 'db', JSON.stringify(db)); } catch (e) { alert('No se pudo guardar. Espacio lleno o navegador en modo privado.'); } }
+let me = null;               // cédula en sesión
+let ip = 'no disponible';
+const device = (navigator.platform || '') + ' | ' + screen.width + 'x' + screen.height + ' | ' + (navigator.userAgent || '').slice(0, 110);
+
+async function hash(s) {
+  try { if (window.crypto && crypto.subtle) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)); return Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2, '0')).join(''); } } catch (e) { }
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57; for (let i = 0; i < s.length; i++) { const ch = s.charCodeAt(i); h1 = Math.imul(h1 ^ ch, 2654435761); h2 = Math.imul(h2 ^ ch, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return 'f' + (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+}
+function validarCedula(c) {
+  if (!/^\d{10}$/.test(c)) return false; const p = +c.slice(0, 2); if (p < 1 || (p > 24 && p !== 30)) return false; if (+c[2] > 5) return false;
+  let s = 0; for (let i = 0; i < 9; i++) { let v = +c[i] * (i % 2 === 0 ? 2 : 1); if (v > 9) v -= 9; s += v; }
+  return ((10 - (s % 10)) % 10) === +c[9];
+}
+function U() { return db.users[me]; }
+function newUser(o) { return Object.assign({ rol: 'estudiante', avatar: '', lastLogin: null, progress: {}, quiz: {}, act: {}, notas: {}, aprobado: false, codigo: '', creado: new Date().toISOString() }, o); }
+function prog(u, m, l) { const k = key(m, l); if (!u.progress[k]) u.progress[k] = { done: false, secs: 0, logs: [], intento: 1, resp: '' }; return u.progress[k]; }
+function totalSecs(u) { let s = 0; for (const k in u.progress) u.progress[k].logs.forEach(x => s += x.seg || 0); return s; }
+function doneCount(u, m) { let n = 0; for (let l = 0; l < 5; l++) if (u.progress[key(m, l)] && u.progress[key(m, l)].done) n++; return n; }
+function modDone(u, m) { return doneCount(u, m) === 5 && u.quiz[m] && u.quiz[m].passed; }
+function modUnlocked(u, m) { return m === 1 || modDone(u, m - 1); }
+function dateOpen(m, l) { return DEMO || today() >= sesDate(m, l); }
+function lessonStatus(u, m, l) {
+  if (!modUnlocked(u, m)) return 'Bloqueada: termina el módulo ' + (m - 1);
+  if (l > 0 && !(u.progress[key(m, l - 1)] && u.progress[key(m, l - 1)].done)) return 'Bloqueada: termina la lección anterior';
+  if (!dateOpen(m, l)) return 'Se abre el ' + fdate(sesDate(m, l));
+  return '';
+}
+function allDone(u) { for (let m = 1; m <= 4; m++) if (!modDone(u, m)) return false; return DEMO || totalSecs(u) >= 40 * 3600; }
+function promedio(u) { const n = Object.values(u.quiz).filter(q => q.best != null).map(q => q.best); return n.length ? n.reduce((a, b) => a + b, 0) / n.length : null; }
+function estado(u) {
+  if (allDone(u)) return 'COMPLETADO';
+  const t = today(); let esp = 0; SESSIONS.forEach(d => { if (d < t) esp++; });
+  let hechas = 0; for (let m = 1; m <= 4; m++) hechas += doneCount(u, m);
+  if (t < START) return 'NO INICIADO';
+  return hechas < esp ? 'ATRASADO' : 'EN CURSO';
+}
+function tagEstado(e) { const c = { 'COMPLETADO': 't-ok', 'ATRASADO': 't-bad', 'EN CURSO': 't-run', 'NO INICIADO': 't-gray' }[e]; return '<span class="tag ' + c + '">' + e + '</span>'; }
+function horas(secs) { return (secs / 3600).toFixed(2); }
+function sinConexion(u) { const t = today(); if (t < START) return false; const ref = u.lastLogin ? new Date(u.lastLogin) : new Date(START + 'T00:00:00'); return (Date.now() - ref.getTime()) / 86400000 >= 3 && estado(u) !== 'COMPLETADO'; }
+function videoCfg(m) {
+  const base = MODS[m - 1].video; const o = (db.settings.videos || {})[m] || {};
+  return { id: o.id != null ? o.id : base.id, titulo: o.titulo || base.titulo, canal: o.canal || base.canal, duracion: o.duracion || base.duracion, activo: !!o.activo, nota: base.nota };
+}
+function ytId(s) { s = (s || '').trim(); const m = s.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([A-Za-z0-9_-]{11})/); if (m) return m[1]; return /^[A-Za-z0-9_-]{11}$/.test(s) ? s : ''; }
+
+/* ===================== CRONÓMETRO ===================== */
+let cur = null, tickH = null, lastAct = Date.now(), idle = false;
+function startLesson(m, l) {
+  stopLesson(); const u = U(); if (!u) return; const p = prog(u, m, l);
+  const entry = { intento: p.intento || 1, fecha: today(), ini: new Date().toISOString(), fin: new Date().toISOString(), seg: 0, ip: ip, dev: device, demo: DEMO };
+  p.logs.push(entry); cur = { m, l, entry, p }; lastAct = Date.now(); idle = false; save();
+  tickH = setInterval(tick, 1000);
+}
+function stopLesson() { if (tickH) clearInterval(tickH); tickH = null; if (cur) { cur.entry.fin = new Date().toISOString(); save(); enqSesion(cur); flush(); } cur = null; document.getElementById('overlay').style.display = 'none'; }
+function tick() {
+  if (!cur) return;
+  if (document.hidden) return;                                   // pestaña oculta: pausa
+  if (idle) return;
+  if (Date.now() - lastAct > IDLE_MS) { idle = true; document.getElementById('overlay').style.display = 'flex'; updTimer(); return; }
+  cur.p.secs++; cur.entry.seg++; cur.entry.fin = new Date().toISOString();
+  if (cur.entry.seg % 5 === 0) save();
+  if (cur.entry.seg % 15 === 0) enqSesion(cur);
+  updTimer();
+}
+function resumeIdle() { idle = false; lastAct = Date.now(); document.getElementById('overlay').style.display = 'none'; }
+['pointerdown', 'keydown', 'touchstart', 'mousemove', 'wheel'].forEach(ev => document.addEventListener(ev, () => { if (!idle) lastAct = Date.now(); }, { passive: true }));
+document.addEventListener('scroll', () => { if (!idle) lastAct = Date.now(); }, true);
+window.addEventListener('blur', () => { setTimeout(() => { if (document.activeElement && document.activeElement.tagName === 'IFRAME' && !idle) lastAct = Date.now(); }, 50); });
+document.addEventListener('visibilitychange', () => { if (cur) { cur.entry.fin = new Date().toISOString(); save(); } });
+window.addEventListener('pagehide', pageHide);
+
+function updTimer() {
+  if (!cur) return; const mins = cur.p.secs / 60, need = MIN_LESSON;
+  const t = document.getElementById('tmr'); if (t) t.textContent = Math.floor(cur.p.secs / 60) + ' min ' + (cur.p.secs % 60) + ' s de ' + need + ' min';
+  const b = document.getElementById('tmrbar'); if (b) b.style.width = Math.min(100, mins / need * 100) + '%';
+  const s = document.getElementById('tmrst'); if (s) s.textContent = idle ? 'EN PAUSA (sin actividad)' : (document.hidden ? 'EN PAUSA (pestaña oculta)' : 'CONTANDO');
+  const bd = document.getElementById('btnDone'); if (bd && !cur.p.done) bd.disabled = !canComplete(cur.m, cur.l).ok;
+  const hint = document.getElementById('doneHint'); if (hint && !cur.p.done) hint.textContent = canComplete(cur.m, cur.l).why;
+}
+
+/* ===================== NAVEGACIÓN ===================== */
+let S = { v: 'auth', m: 0, l: 0, tab: 'login', msg: '', filtro: '', q: '', det: '' };
+function go(v, o) {
+  if (v !== 'leccion') stopLesson(); S = Object.assign({}, S, { v: v, m: 0, l: 0, msg: '' }, o || {}); render(); window.scrollTo(0, 0);
+  if (ONLINE && me && v !== 'leccion' && v !== 'auth') {
+    const adminView = ['admin', 'conta', 'acta', 'resp'].indexOf(v) >= 0, mine = ['home', 'modulo', 'cert'].indexOf(v) >= 0;
+    if (adminView && U() && ['administrador', 'presidente', 'contadora'].indexOf(U().rol) >= 0) refreshAll().then(() => { if (S.v === v && me) render(); });
+    else if (mine) refreshMe().then(() => { if (S.v === v && me && U()) render(); });
+  }
+}
+function render() {
+  const app = document.getElementById('app'); let h = '';
+  if (DEMO) h += '<div class="demo">MODO ENSAYO (#demo): estos datos NO son evidencia y el tiempo mínimo es de 1 minuto</div><div style="height:22px"></div>';
+  if (!me || !U()) { app.innerHTML = h + viewAuth(); return; }
+  h += header() + '<main>' + view() + '</main><footer>' + esc(LEGAL) + '</footer>';
+  app.innerHTML = h; updSync();
+  if (S.v === 'leccion') { startLesson(S.m, S.l); updTimer(); if (S.l === 3) refreshForum(S.m); }
+}
+function header() {
+  const u = U(); let n = '<button class="sec" onclick="go(\'home\')">Mi avance</button>';
+  if (u.rol === 'administrador' || u.rol === 'presidente') n += '<button class="sec" onclick="go(\'admin\')">Panel de control</button>';
+  if (u.rol === 'administrador' || u.rol === 'contadora' || u.rol === 'presidente') n += '<button class="sec" onclick="go(\'conta\')">Resumen SUT</button>';
+  if (u.rol === 'administrador') n += '<button class="sec" onclick="go(\'videos\')">Configuración de videos</button>';
+  if (u.rol === 'administrador' || u.rol === 'presidente') n += '<button class="sec" onclick="go(\'resp\')">Respaldo</button>';
+  n += '<button class="bad" onclick="salir()">Salir</button>';
+  return '<header><h1>Academia Luna Ala - MDT-2025-006</h1><div class="who">' + esc(u.nombre) + ' · ' + esc(u.cargo) + ' · ' + esc(u.rol) + '</div><div class="who" id="sync"></div></header><nav>' + n + '</nav>';
+}
+function view() {
+  switch (S.v) {
+    case 'home': return viewHome(); case 'modulo': return viewModulo(S.m); case 'leccion': return viewLeccion(S.m, S.l);
+    case 'admin': return viewAdmin(); case 'conta': return viewConta(); case 'cert': return viewCert(S.det || me);
+    case 'videos': return viewVideos(); case 'resp': return viewResp(); case 'acta': return viewActa(S.det);
+  } return viewHome();
+}
+
+/* ===================== AUTENTICACIÓN ===================== */
+function hasAdmin() { return ONLINE ? srvAdmin !== false : Object.values(db.users).some(u => u.rol === 'administrador'); }
+function storageOk() { try { localStorage.setItem('__t', '1'); localStorage.removeItem('__t'); return true; } catch (e) { return false; } }
+function setTab(x) { S.tab = x; S.tabSet = true; S.msg = ''; render(); }
+function viewAuth() {
+  let tab = S.tab; if (!S.tabSet && !hasAdmin()) tab = 'admin';
+  let h = '<main><div class="card"><h2>Academia Luna Ala - MDT-2025-006</h2><div class="msg warn"><b>Aviso legal:</b> ' + esc(LEGAL) + '</div>';
+  h += '<p class="small">' + esc(ASOC) + '. Capacitación del 23/11/2026 al 18/12/2026 (40 horas).</p></div>';
+  if (!ONLINE && !storageOk()) h += '<div class="msg err"><b>Este navegador NO está guardando datos</b> (probablemente estás viendo esto dentro de una vista previa o en modo privado). Lo que registres se perderá al cerrar. Guarda el archivo academia-luna.html en el computador y ábrelo con doble clic en Chrome.</div>';
+  if (ONLINE && srvErr) h += '<div class="msg err">No hay conexión con el servidor de registro (Google Sheets). Revisa tu internet y recarga la página.</div>';
+  if (S.msg) h += '<div class="msg ' + (S.msgOk ? 'ok' : 'err') + '">' + S.msg + '</div>';
+  h += '<div class="card"><button class="' + (tab === 'login' ? '' : 'sec') + '" onclick="setTab(\'login\')">Iniciar sesión</button><button class="' + (tab === 'reg' ? '' : 'sec') + '" onclick="setTab(\'reg\')">Registrarme (trabajador / directivo)</button>' + (hasAdmin() ? '' : '<button class="' + (tab === 'admin' ? '' : 'sec') + '" onclick="setTab(\'admin\')">Crear cuenta del Administrador</button>') + '</div>';
+  if (tab === 'admin' && !hasAdmin()) {
+    h += '<div class="card"><h2>Cuenta del Administrador</h2><p>Se crea una sola vez, la hace el Lcdo. Carlos Arteaga. Después él asigna los roles de Contadora y Presidente desde su Panel de control.</p>' + formReg(true) + '</div>';
+  } else if (tab === 'reg') {
+    h += '<div class="card"><h2>Registro</h2>' + (hasAdmin() ? '' : '<div class="msg warn">Aún no existe la cuenta del Administrador. Conviene crearla primero.</div>') + formReg(false) + '</div>';
+  } else {
+    h += '<div class="card"><h2>Iniciar sesión</h2><label>Cédula</label><input id="lc" inputmode="numeric" maxlength="10"><label>Contraseña</label><input id="lp" type="password"><button onclick="login()">Entrar</button></div>';
+  }
+  return h + '</main><footer>' + esc(LEGAL) + '</footer>';
+}
+function formReg(admin) {
+  const cargos = admin ? '<option>Administrador</option>' : '<option value="">-- Elige tu cargo --</option>' + CARGOS.map(c => '<option>' + c + '</option>').join('');
+  return '<label>Nombre completo</label><input id="rn"><label>Cédula (10 dígitos)</label><input id="rc" inputmode="numeric" maxlength="10"><label>Cargo</label><select id="rg">' + cargos + '</select><label>Correo o celular</label><input id="rt"><label>Contraseña (mínimo 6 caracteres)</label><input id="rp" type="password"><button onclick="registrar(' + (admin ? 'true' : 'false') + ')">Crear cuenta</button>';
+}
+async function registrar(admin) {
+  const n = v('rn').trim(), c = v('rc').trim(), g = v('rg'), t = v('rt').trim(), p = v('rp');
+  const err = m => { S.msg = m; S.msgOk = false; render(); };
+  if (n.split(/\s+/).length < 2) return err('Escribe tu nombre completo (nombres y apellidos).');
+  if (!validarCedula(c)) return err('La cédula no es válida. Revisa los 10 dígitos.');
+  if (!ONLINE && db.users[c]) return err('Esa cédula ya está registrada. Inicia sesión.');
+  if (!g) return err('Elige tu cargo.');
+  if (!t) return err('Escribe un correo o celular.'); if (p.length < 6) return err('La contraseña debe tener mínimo 6 caracteres.');
+  const salt = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  const hh = await hash(salt + p);
+  if (ONLINE) {
+    try { const r = await api('register', { user: { cedula: c, nombre: n, cargo: g, contacto: t, salt: salt, hash: hh, admin: !!admin } }); if (!r.ok) return err(r.error || 'No se pudo registrar.'); if (admin) srvAdmin = true; }
+    catch (e) { return err('No hay conexión con el servidor. Intenta de nuevo en un momento.'); }
+  } else {
+    db.users[c] = newUser({ nombre: n, cedula: c, cargo: g, contacto: t, salt: salt, pass: hh, rol: admin ? 'administrador' : 'estudiante' }); save();
+  }
+  S.tab = 'login'; S.tabSet = true; S.msg = 'Cuenta creada. Ya puedes iniciar sesión.'; S.msgOk = true; render();
+}
+async function login() {
+  const c = v('lc').trim(), p = v('lp');
+  const bad = m => { S.msg = m; S.msgOk = false; render(); };
+  if (ONLINE) {
+    try {
+      const rs = await api('salt', { ced: c }); if (!rs.ok || !rs.salt) return bad('Cédula o contraseña incorrecta.');
+      const hh = await hash(rs.salt + p); const r = await api('login', { ced: c, hash: hh });
+      if (!r.ok) return bad(r.error || 'Cédula o contraseña incorrecta.');
+      me = c; myHash = hh;
+      if (queue.some(x => x.by === c)) { await flush(); const r2 = await api('me', { ced: c, hash: hh }); applyLogin(r2.ok ? r2 : r); } else applyLogin(r);
+      if (['administrador', 'presidente', 'contadora'].indexOf(r.user.rol) >= 0) await refreshAll();
+    } catch (e) { me = null; myHash = null; return bad('No hay conexión con el servidor. Revisa tu internet e intenta de nuevo.'); }
+  } else {
+    const u = db.users[c];
+    if (!u || u.pass !== await hash(u.salt + p)) return bad('Cédula o contraseña incorrecta.');
+    me = c; u.lastLogin = new Date().toISOString(); save();
+  }
+  S.msg = '';
+  try { const ac = new AbortController(); setTimeout(() => ac.abort(), 4000); fetch('https://api.ipify.org?format=json', { signal: ac.signal }).then(r => r.json()).then(j => { ip = j.ip || ip; }).catch(() => { }); } catch (e) { }
+  go('home');
+}
+async function salir() {
+  stopLesson();
+  if (ONLINE) {
+    const ok = await flush();
+    if (!ok && !confirm('Hay datos sin enviar al servidor (sin conexión). Se quedan guardados en este aparato y se envían cuando vuelvas a entrar. ¿Salir de todos modos?')) return;
+    db = { users: {}, forum: [], att: {}, settings: { videos: (db.settings && db.settings.videos) || {} }, creado: db.creado }; save();
+  }
+  me = null; myHash = null; S = { v: 'auth', tab: 'login', tabSet: true, msg: '' }; render();
+}
+function v(id) { const e = document.getElementById(id); return e ? e.value : ''; }
+
+/* ===================== ESTUDIANTE ===================== */
+function avatarHtml(u) { return '<div class="avatar">' + (u.avatar ? '<img src="' + u.avatar + '">' : esc(u.nombre.split(/\s+/).map(x => x[0]).slice(0, 2).join('').toUpperCase())) + '</div>'; }
+function setFoto(inp) {
+  const f = inp.files[0]; if (!f) return; const r = new FileReader();
+  r.onload = e => { const im = new Image(); im.onload = () => { const c = document.createElement('canvas'); c.width = c.height = 128; const x = c.getContext('2d'); const s = Math.min(im.width, im.height); x.drawImage(im, (im.width - s) / 2, (im.height - s) / 2, s, s, 0, 0, 128, 128); U().avatar = c.toDataURL('image/jpeg', .7); try { localStorage.setItem(PFX + 'av_' + me, U().avatar); } catch (e) { } save(); render(); }; im.src = e.target.result; };
+  r.readAsDataURL(f);
+}
+function viewHome() {
+  const u = U(), secs = totalSecs(u), hs = secs / 3600, pct = Math.min(100, hs / 40 * 100), est = estado(u);
+  let h = '<div class="card"><div class="row">' + avatarHtml(u) + '<div><h2 style="margin:0">' + esc(u.nombre) + '</h2><div>' + esc(u.cargo) + ' · Cédula ' + esc(u.cedula) + '</div><div>Inicio de la capacitación: <b>' + fdate(SESSIONS[0]) + '</b> · Fin: <b>' + fdate(SESSIONS[19]) + '</b></div><div>' + tagEstado(est) + '</div></div></div>';
+  h += '<label style="margin-top:10px" class="noprint">Cambiar foto <input type="file" accept="image/*" onchange="setFoto(this)"></label></div>';
+  h += '<div class="card"><h3>Mi progreso total</h3><div class="bar"><div style="width:' + pct + '%"></div></div><p><b>' + horas(secs) + '</b> de 40 horas acumuladas · Faltan <b>' + Math.max(0, 40 - hs).toFixed(2) + '</b> horas</p></div>';
+  if (est === 'ATRASADO') h += '<div class="msg err">Vas atrasado respecto al calendario. Avisa al Administrador.</div>';
+  h += '<div class="card"><h3>Módulos</h3>';
+  MODS.forEach(M => {
+    const m = M.id, ok = modUnlocked(u, m), d = doneCount(u, m) + (u.quiz[m] && u.quiz[m].passed ? 0 : 0), pc = Math.round(doneCount(u, m) / 5 * 100);
+    h += '<div class="card ' + (ok ? '' : 'lock') + '"><b>Módulo ' + m + ': ' + esc(M.titulo) + '</b><div class="bar" style="margin:8px 0"><div style="width:' + pc + '%"></div></div>' + pc + '% · Evaluación: ' + (u.quiz[m] ? (u.quiz[m].passed ? 'aprobada (' + u.quiz[m].best + '/10)' : 'reprobada (mejor ' + u.quiz[m].best + '/10)') : 'pendiente') + '<br>' + (ok ? '<button onclick="go(\'modulo\',{m:' + m + '})">Entrar al módulo</button>' : 'Bloqueado: termina el módulo ' + (m - 1)) + '</div>';
+  });
+  h += '</div><div class="card"><h3>Calendario de sesiones (lunes a viernes, 14:00 a 16:00)</h3><div class="scroll"><table><tr><th>#</th><th>Fecha</th><th>Módulo / lección</th><th>Asistencia</th><th>Min. reales</th></tr>';
+  SESSIONS.forEach((d, i) => {
+    const m = Math.floor(i / 5) + 1, l = i % 5, p = u.progress[key(m, l)], mark = p && p.done ? '✔ completada' : (d < today() ? '✖ pendiente' : '•'), val = db.att[u.cedula] && db.att[u.cedula][d] ? ' · validada' : '';
+    h += '<tr><td>' + (i + 1) + '</td><td>' + fdate(d) + '</td><td>M' + m + ' - ' + LESSONS[l] + '</td><td>' + mark + val + '</td><td>' + (p ? Math.round(p.logs.reduce((a, x) => a + x.seg, 0) / 60) : 0) + '</td></tr>';
+  });
+  h += '</table></div></div><div class="card"><h3>Certificado</h3>' + certBlock(u) + '</div>';
+  return h;
+}
+function certBlock(u) {
+  if (!allDone(u)) return '<p>Se activa cuando completes las 40 horas y apruebes las 4 evaluaciones.</p><button disabled>Generar Certificado</button>';
+  if (!u.aprobado) return '<div class="msg info">Cumpliste todo. Falta la aprobación del Presidente.</div><button disabled>Generar Certificado</button>';
+  return '<button onclick="go(\'cert\',{det:\'' + u.cedula + '\'})">Generar Certificado</button>';
+}
+function viewModulo(m) {
+  const u = U(), M = MODS[m - 1]; let h = '<div class="card"><button class="sec" onclick="go(\'home\')">← Volver</button><h2>Módulo ' + m + ': ' + esc(M.titulo) + '</h2><p><b>Objetivo:</b> ' + esc(M.objetivo) + '</p><p>' + esc(M.intro) + '</p></div><div class="card"><h3>Lecciones (cada una dura 2 horas)</h3>';
+  for (let l = 0; l < 5; l++) {
+    const st = lessonStatus(u, m, l), p = u.progress[key(m, l)], done = p && p.done;
+    h += '<div class="card ' + (st ? 'lock' : '') + '"><b>Lección ' + (l + 1) + ': ' + LESSONS[l] + '</b> · ' + fdate(sesDate(m, l)) + (done ? ' · <span class="tag t-ok">completada</span>' : '') + '<br>' + (st ? esc(st) : '<button onclick="go(\'leccion\',{m:' + m + ',l:' + l + '})">' + (done ? 'Repasar' : 'Empezar') + '</button>') + '</div>';
+  }
+  return h + '</div>';
+}
+function canComplete(m, l) {
+  const u = U(), p = prog(u, m, l); const mins = p.secs / 60;
+  if (mins < MIN_LESSON) return { ok: false, why: 'Aún falta tiempo: mínimo ' + MIN_LESSON + ' minutos reales en esta lección.' };
+  if (l === 0 && (p.resp || '').trim().length < 40) return { ok: false, why: 'Escribe tus apuntes de la lección (mínimo 40 letras).' };
+  if (l === 2 && !(u.act[m] && u.act[m].texto.trim().length >= 80)) return { ok: false, why: 'Guarda tu actividad (mínimo 80 letras).' };
+  if (l === 3 && !db.forum.some(f => f.m === m && f.ced === u.cedula)) return { ok: false, why: 'Escribe al menos un comentario en el foro.' };
+  if (l === 4 && !(u.quiz[m] && u.quiz[m].passed)) return { ok: false, why: 'Debes aprobar la evaluación (mínimo 7 de 10).' };
+  return { ok: true, why: 'Ya puedes marcar la lección como completada.' };
+}
+function viewLeccion(m, l) {
+  const u = U(), M = MODS[m - 1], st = lessonStatus(u, m, l); if (st) return '<div class="card msg err">' + esc(st) + '</div>';
+  const p = prog(u, m, l);
+  let h = '<div id="timerbar"><b>Cronómetro:</b> <span id="tmr"></span> · <b id="tmrst"></b><div class="bar" style="height:10px;margin-top:4px"><div id="tmrbar" style="width:0"></div></div></div>';
+  h += '<div class="card"><button class="sec" onclick="go(\'modulo\',{m:' + m + '})">← Volver al módulo</button><h2>M' + m + ' · Lección ' + (l + 1) + ': ' + LESSONS[l] + '</h2><div class="small">' + esc(M.titulo) + '</div></div>';
+  if (l === 0) {
+    const vc = videoCfg(m), id = ytId(vc.id);
+    h += '<div class="card"><p><b>Objetivo:</b> ' + esc(M.objetivo) + '</p><p>' + esc(M.intro) + '</p>';
+    if (vc.activo && id) h += '<h3>Video</h3><p class="small">' + esc(vc.titulo) + ' · Canal: ' + esc(vc.canal) + ' · Duración: ' + esc(vc.duracion) + '</p><iframe src="https://www.youtube-nocookie.com/embed/' + id + '" allowfullscreen></iframe><p><a target="_blank" rel="noopener" href="https://www.youtube.com/watch?v=' + id + '">Abrir en YouTube</a></p>';
+    else h += '<div class="msg warn"><b>Video no disponible.</b> ' + esc(vc.nota) + '<br>Esta lección se hace con la lectura de apoyo y las preguntas guía.</div>';
+    h += '</div><div class="card"><h3>Lectura de apoyo</h3><div class="lectura">' + md(M.lectura.split('## 2.')[0]) + '</div></div>';
+    h += '<div class="card"><h3>Mis apuntes</h3><p>Escribe 3 ideas importantes que aprendiste hoy y 1 duda.</p><textarea id="resp" oninput="saveResp(' + m + ',' + l + ')">' + esc(p.resp || '') + '</textarea></div>';
+  } else if (l === 1) {
+    h += '<div class="card lectura"><h3>Lectura del módulo</h3>' + md(M.lectura) + '</div>';
+  } else if (l === 2) {
+    const a = M.actividad; h += '<div class="card"><h3>' + esc(a.titulo) + '</h3><div style="white-space:pre-wrap">' + esc(a.instruccion) + '</div></div><div class="card"><h3>Mi respuesta</h3><textarea id="act" style="min-height:300px">' + esc(u.act[m] ? u.act[m].texto : '') + '</textarea><button onclick="saveAct(' + m + ')">Guardar actividad</button><div id="actmsg"></div></div>';
+  } else if (l === 3) {
+    h += '<div class="card"><h3>Foro: preguntas guía para la casa comunal</h3><ol>' + M.foro.map(q => '<li>' + esc(q) + '</li>').join('') + '</ol></div>' + forumBlock(m);
+  } else {
+    h += quizBlock(m);
+  }
+  h += '<div class="card"><p id="doneHint" class="small"></p>' + (p.done ? '<div class="msg ok">Lección completada.</div>' : '<button id="btnDone" disabled onclick="markDone(' + m + ',' + l + ')">Marcar como completada</button>') + '</div>';
+  return h;
+}
+function md(t) {
+  let out = '', inList = false;
+  t.split('\n').forEach(line => {
+    if (/^- /.test(line)) { if (!inList) { out += '<ul>'; inList = true; } out += '<li>' + esc(line.slice(2)) + '</li>'; return; }
+    if (inList) { out += '</ul>'; inList = false; }
+    if (/^## /.test(line)) out += '<h3>' + esc(line.slice(3)) + '</h3>'; else if (line.trim()) out += '<p>' + esc(line) + '</p>';
+  });
+  return out + (inList ? '</ul>' : '');
+}
+function saveResp(m, l) { const tx = v('resp'); prog(U(), m, l).resp = tx; save(); enq({ k: 'ap|' + m + '|' + l, t: 'apuntes', m: m, l: l, texto: tx }); }
+function saveAct(m) { const t = v('act'); const f = new Date().toISOString(); U().act[m] = { texto: t, fecha: f }; save(); enq({ k: 'ac|' + m, t: 'actividad', m: m, texto: t, fecha: f }); flush(); document.getElementById('actmsg').innerHTML = '<div class="msg ok">Guardada.</div>'; updTimer(); }
+function markDone(m, l) { const c = canComplete(m, l); if (!c.ok) return; const p = prog(U(), m, l); p.done = true; save(); enqSesion(cur); enq({ k: 'l|' + m + '|' + l, t: 'leccion', m: m, l: l, done: true, intento: p.intento || 1, fecha: new Date().toISOString() }); flush(); render(); }
+function forumList(m) {
+  return db.forum.filter(f => f.m === m).slice().reverse().map(f => '<div class="q"><b>' + esc(f.nombre) + '</b> (' + esc(f.cargo) + ') · ' + fdt(f.fecha) + '<br>' + esc(f.texto) + '</div>').join('');
+}
+function forumBlock(m) {
+  return '<div class="card"><h3>Comentarios</h3><textarea id="fc" style="min-height:110px" placeholder="Escribe tu comentario"></textarea><button onclick="postForum(' + m + ')">Publicar comentario</button><div id="forumlist">' + forumList(m) + '</div></div>';
+}
+function postForum(m) {
+  const t = v('fc').trim(); if (t.length < 10) { alert('Escribe un comentario de al menos 10 letras.'); return; }
+  const u = U(), f = { m: m, ced: u.cedula, nombre: u.nombre, cargo: u.cargo, texto: t, fecha: new Date().toISOString() };
+  db.forum.push(f); save(); enq({ k: 'f|' + f.fecha, t: 'foro', id: me + '|' + f.fecha, m: m, texto: t, fecha: f.fecha });
+  document.getElementById('fc').value = ''; document.getElementById('forumlist').innerHTML = forumList(m);
+  flush().then(() => refreshForum(m));
+}
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+let quizSet = {};
+function quizBlock(m) {
+  const u = U(), q = u.quiz[m]; let h = '<div class="card"><h3>Evaluación del módulo ' + m + '</h3>';
+  if (q && q.passed) return h + '<div class="msg ok">Aprobada con ' + q.best + ' de 10. Intentos: ' + q.intentos.length + '.</div></div>';
+  if (q) h += '<div class="msg warn">Intentos anteriores: ' + q.intentos.map(i => i.nota + '/10').join(', ') + '.</div>';
+  h += '<p>10 preguntas. Aprueba con 7 o más. Si repruebas, debes repetir el módulo.</p>';
+  quizSet[m] = shuffle(MODS[m - 1].quiz.map((x, i) => i));
+  quizSet[m].forEach((qi, n) => {
+    const Q = MODS[m - 1].quiz[qi]; h += '<div class="q"><b>' + (n + 1) + '. ' + esc(Q.q) + '</b>';
+    Q.o.forEach((o, k) => h += '<label><input type="radio" name="q' + n + '" value="' + k + '"> ' + esc(o) + '</label>');
+    h += '</div>';
+  });
+  return h + '<button onclick="gradeQuiz(' + m + ')">Enviar evaluación</button><div id="qres"></div></div>';
+}
+function gradeQuiz(m) {
+  const set = quizSet[m]; let ok = 0;
+  for (let n = 0; n < set.length; n++) { const r = document.querySelector('input[name="q' + n + '"]:checked'); if (!r) { alert('Falta responder la pregunta ' + (n + 1) + '.'); return; } if (+r.value === MODS[m - 1].quiz[set[n]].c) ok++; }
+  const u = U(); const q = u.quiz[m] || { best: 0, passed: false, intentos: [] };
+  q.intentos.push({ fecha: new Date().toISOString(), nota: ok }); q.best = Math.max(q.best || 0, ok);
+  enqSesion(cur); enq({ k: 'q|' + m + '|' + q.intentos.length, t: 'quiz', m: m, n: q.intentos.length, nota: ok, fecha: new Date().toISOString() });
+  if (ok >= 7) { q.passed = true; u.quiz[m] = q; save(); flush(); document.getElementById('qres').innerHTML = '<div class="msg ok">Nota: ' + ok + ' de 10. ¡Aprobaste!</div>'; render(); return; }
+  q.passed = false; u.quiz[m] = q;
+  for (let l = 0; l < 5; l++) { const p = prog(u, m, l); p.done = false; p.secs = 0; p.intento = (p.intento || 1) + 1; }
+  save(); enq({ t: 'reset', m: m, intento: prog(u, m, 0).intento }); flush(); alert('Nota: ' + ok + ' de 10. Necesitas 7 para aprobar. Debes repetir el módulo ' + m + '. Tu tiempo anterior queda registrado como evidencia.'); go('modulo', { m: m });
+}
+
+/* ===================== CERTIFICADO ===================== */
+function datosCert(u) {
+  let ini = null, fin = null; Object.values(u.progress).forEach(p => p.logs.forEach(x => { if (!x.demo || DEMO) { if (!ini || x.ini < ini) ini = x.ini; if (!fin || x.fin > fin) fin = x.fin; } }));
+  return { ini: ini ? ymd(new Date(ini)) : SESSIONS[0], fin: fin ? ymd(new Date(fin)) : SESSIONS[19] };
+}
+function viewCert(ced) {
+  const u = db.users[ced]; if (!u || !u.aprobado) return '<div class="card msg err">Certificado no disponible.</div>';
+  const d = datosCert(u);
+  return '<div class="card noprint"><button class="sec" onclick="go(\'home\')">← Volver</button><button onclick="window.print()">Descargar / Imprimir PDF</button><p class="small">En la ventana de impresión elige “Guardar como PDF”.</p></div>' +
+    '<div class="cert">' + (DEMO ? '<h2 style="color:#b26a00">ENSAYO - NO VÁLIDO</h2>' : '') + '<div>' + esc(ASOC) + '</div><h1>CERTIFICADO DE CAPACITACIÓN</h1><div>Se certifica que</div><div class="name">' + esc(u.nombre) + '</div><div>C.I. ' + esc(u.cedula) + ' · Cargo: ' + esc(u.cargo) + '</div>' +
+    '<p>aprobó la capacitación de <b>40 horas</b> en modalidad mixta, realizada del <b>' + fdate(SESSIONS[0]) + '</b> al <b>' + fdate(SESSIONS[19]) + '</b> (registro real de uso: ' + fdate(d.ini) + ' a ' + fdate(d.fin) + ', ' + horas(totalSecs(u)) + ' horas), en cumplimiento de la Ley Orgánica para la Igualdad Salarial entre Mujeres y Hombres y el Acuerdo Ministerial MDT-2025-006, sobre:</p>' +
+    '<p style="text-align:left;max-width:700px;margin:auto">1. Derechos laborales de mujeres y hombres<br>2. Igualdad de género<br>3. Erradicación de violencia y no discriminación en el centro de trabajo<br>4. Trabajo de igual valor y equidad salarial</p>' +
+    '<p>Código de verificación: <b>' + esc(u.codigo) + '</b></p><div class="sign"><div>Diego Montalvo<br>Presidente</div><div>Lcdo. Carlos Arteaga<br>Administrador</div></div><p class="small">Aprobado por el Presidente el ' + fdt(u.aprobadoFecha) + '</p></div>';
+}
+async function aprobar(ced) {
+  const u = db.users[ced]; if (!u || !allDone(u)) return; u.aprobado = true; u.aprobadoFecha = new Date().toISOString(); u.aprobadoPor = db.users[me].nombre;
+  u.codigo = 'LA26-' + (await hash('lunaala|' + ced + '|' + totalSecs(u) + '|' + u.aprobadoFecha)).slice(0, 10).toUpperCase(); save(); enq({ t: 'aprobar', ced: ced, codigo: u.codigo }); const ok = await flush(); if (!ok) alert('No se pudo enviar la aprobación al servidor. Quedó pendiente; se enviará cuando haya conexión.'); render();
+}
+
+/* ===================== ADMINISTRADOR / PRESIDENTE ===================== */
+function rowsEst() { return Object.values(db.users).filter(u => u.rol !== 'contadora' || true).sort((a, b) => a.nombre.localeCompare(b.nombre)); }
+function viewAdmin() {
+  const u = U(), isAdm = u.rol === 'administrador', isPres = u.rol === 'presidente';
+  let all = rowsEst(); const al = all.filter(sinConexion);
+  let list = all.filter(x => (S.q ? (x.nombre + x.cedula).toLowerCase().indexOf(S.q.toLowerCase()) >= 0 : true));
+  if (S.filtro === 'atr') list = list.filter(x => estado(x) === 'ATRASADO'); if (S.filtro === 'comp') list = list.filter(x => estado(x) === 'COMPLETADO');
+  let h = '<div class="card"><h2>Panel de control</h2><p>Registrados: <b>' + all.length + '</b> · Completados: <b>' + all.filter(x => estado(x) === 'COMPLETADO').length + '</b> · Atrasados: <b>' + all.filter(x => estado(x) === 'ATRASADO').length + '</b></p>';
+  if (al.length) h += '<div class="msg err"><b>Alerta:</b> sin entrar en 3 días o más: ' + al.map(x => esc(x.nombre)).join(', ') + '</div>';
+  h += '<input placeholder="Buscar por nombre o cédula" value="' + esc(S.q) + '" oninput="S.q=this.value;render2()"><button class="sec" onclick="S.filtro=\'\';render()">Todos</button><button class="sec" onclick="S.filtro=\'atr\';render()">Solo atrasados</button><button class="sec" onclick="S.filtro=\'comp\';render()">Solo completados</button><br><button onclick="csvAdmin()">Exportar CSV para la Contadora</button><button class="sec" onclick="go(\'acta\',{det:\'' + today() + '\'})">Acta de asistencia diaria (PDF)</button></div>';
+  h += '<div class="card"><div class="scroll"><table><tr><th>Nombre</th><th>Cédula</th><th>Cargo</th><th>Rol</th><th>Horas</th><th>% avance</th><th>Última conexión</th><th>Nota prom.</th><th>Estado</th><th></th></tr>';
+  list.forEach(x => {
+    const secs = totalSecs(x), pr = promedio(x);
+    h += '<tr><td>' + esc(x.nombre) + '</td><td>' + esc(x.cedula) + '</td><td>' + esc(x.cargo) + '</td><td>' + (isAdm ? '<select style="font-size:14px;padding:4px;margin:0" onchange="setRol(\'' + x.cedula + '\',this.value)">' + ROLES.map(r => '<option' + (r === x.rol ? ' selected' : '') + '>' + r + '</option>').join('') + '</select>' : esc(x.rol)) + '</td><td>' + horas(secs) + '</td><td>' + Math.round(Math.min(100, secs / 144000 * 100)) + '%</td><td>' + fdt(x.lastLogin) + '</td><td>' + (pr == null ? '—' : pr.toFixed(1)) + '</td><td>' + tagEstado(estado(x)) + '</td><td><button class="sec" style="min-height:40px;font-size:15px;padding:6px 10px" onclick="go(\'admin\',{det:\'' + x.cedula + '\',q:S.q,filtro:S.filtro})">Ver detalle</button></td></tr>';
+  });
+  h += '</table></div></div>';
+  if (S.det && db.users[S.det]) h += detalle(db.users[S.det], isAdm, isPres);
+  if (isPres) h += '<div class="card"><h3>Aprobación de certificados</h3>' + all.map(x => allDone(x) ? '<div>' + esc(x.nombre) + ' · ' + (x.aprobado ? '<span class="tag t-ok">aprobado</span> ' + esc(x.codigo) : '<button onclick="aprobar(\'' + x.cedula + '\')">Aprobar certificado</button>') + (x.aprobado ? ' <button class="sec" onclick="go(\'cert\',{det:\'' + x.cedula + '\'})">Ver</button>' : '') + '</div>' : '').join('') + '</div>';
+  return h;
+}
+function render2() { const pos = document.activeElement; const sel = pos && pos.selectionStart; render(); const i = document.querySelector('input[placeholder^="Buscar"]'); if (i) { i.focus(); try { i.setSelectionRange(sel, sel); } catch (e) { } } }
+function setRol(ced, r) { if (db.users[ced].rol === 'administrador' && r !== 'administrador' && Object.values(db.users).filter(x => x.rol === 'administrador').length < 2) { alert('Debe quedar al menos un Administrador.'); render(); return; } db.users[ced].rol = r; save(); enq({ t: 'rol', ced: ced, rol: r }); flush(); render(); }
+function detalle(x, isAdm, isPres) {
+  let h = '<div class="card"><h2>Detalle: ' + esc(x.nombre) + '</h2><p>Contacto: ' + esc(x.contacto) + '</p><h3>Asistencia por día</h3><div class="scroll"><table><tr><th>Fecha</th><th>Lección</th><th>Completada</th><th>Min. reales</th><th>Primer inicio</th><th>Último fin</th><th>Validada</th></tr>';
+  SESSIONS.forEach((d, i) => {
+    const m = Math.floor(i / 5) + 1, l = i % 5, p = x.progress[key(m, l)]; const logs = p ? p.logs : [];
+    const vd = db.att[x.cedula] && db.att[x.cedula][d];
+    h += '<tr><td>' + fdate(d) + '</td><td>M' + m + ' ' + LESSONS[l] + '</td><td>' + (p && p.done ? 'Sí' : 'No') + '</td><td>' + Math.round(logs.reduce((a, y) => a + y.seg, 0) / 60) + '</td><td>' + (logs.length ? ftime(logs[0].ini) : '—') + '</td><td>' + (logs.length ? ftime(logs[logs.length - 1].fin) : '—') + '</td><td>' + (isAdm ? '<input type="checkbox" style="width:auto;margin:0" ' + (vd ? 'checked' : '') + ' onchange="valAtt(\'' + x.cedula + '\',\'' + d + '\',this.checked)">' : (vd ? 'Sí' : 'No')) + '</td></tr>';
+  });
+  h += '</table></div><h3>Evaluaciones</h3>' + [1, 2, 3, 4].map(m => 'Módulo ' + m + ': ' + (x.quiz[m] ? x.quiz[m].intentos.map(i => i.nota + '/10').join(', ') + (x.quiz[m].passed ? ' (aprobado)' : ' (no aprobado)') : 'pendiente')).join('<br>');
+  h += '<h3>Actividades prácticas</h3>' + [1, 2, 3, 4].map(m => '<b>Módulo ' + m + ':</b> ' + (x.act[m] ? '<div class="q" style="white-space:pre-wrap">' + esc(x.act[m].texto) + '</div>' : 'sin entregar<br>')).join('');
+  h += '<h3>Registro de sesiones (evidencia)</h3><div class="scroll"><table><tr><th>Lección</th><th>Fecha</th><th>Inicio</th><th>Fin</th><th>Min.</th><th>IP</th><th>Dispositivo</th></tr>';
+  Object.keys(x.progress).forEach(k => x.progress[k].logs.forEach(g => h += '<tr><td>' + k + '</td><td>' + fdate(g.fecha) + '</td><td>' + ftime(g.ini) + '</td><td>' + ftime(g.fin) + '</td><td>' + (g.seg / 60).toFixed(1) + '</td><td>' + esc(g.ip) + '</td><td>' + esc(g.dev) + '</td></tr>'));
+  return h + '</table></div></div>';
+}
+function valAtt(c, d, val) { db.att[c] = db.att[c] || {}; db.att[c][d] = val; save(); enq({ k: 'at|' + c + '|' + d, t: 'asistencia', ced: c, fecha: d, val: val }); flush(); }
+function viewActa(d) {
+  const all = rowsEst();
+  let h = '<div class="card noprint"><button class="sec" onclick="go(\'admin\')">← Volver</button> Fecha: <input type="date" value="' + d + '" onchange="go(\'acta\',{det:this.value})" style="width:auto"><button onclick="window.print()">Imprimir / Guardar PDF</button></div><div class="card"><h2>Acta de asistencia diaria - ' + fdate(d) + '</h2><p>' + esc(ASOC) + '. Capacitación MDT-2025-006.</p><table><tr><th>Nombre</th><th>Cédula</th><th>Cargo</th><th>Primer inicio</th><th>Último fin</th><th>Min. reales</th><th>Firma</th></tr>';
+  all.forEach(x => {
+    let seg = 0, ini = null, fin = null; Object.values(x.progress).forEach(p => p.logs.forEach(g => { if (g.fecha === d) { seg += g.seg; if (!ini || g.ini < ini) ini = g.ini; if (!fin || g.fin > fin) fin = g.fin; } }));
+    h += '<tr><td>' + esc(x.nombre) + '</td><td>' + esc(x.cedula) + '</td><td>' + esc(x.cargo) + '</td><td>' + ftime(ini) + '</td><td>' + ftime(fin) + '</td><td>' + Math.round(seg / 60) + '</td><td style="width:160px"></td></tr>';
+  });
+  return h + '</table><p style="margin-top:50px">Administrador: ______________________ (Lcdo. Carlos Arteaga)</p></div>';
+}
+function dl(name, text, type) { const b = new Blob([text], { type: type || 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = name; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+function csvCell(s) { s = String(s == null ? '' : s); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+function csvAdmin() {
+  const rows = [['Cédula', 'Nombre', 'Cargo', 'Horas acumuladas', 'Fecha primer ingreso', 'Fecha último ingreso', 'Nota promedio', 'Evaluaciones aprobadas', 'Estado', 'Certificado aprobado', 'Código', 'Modalidad']];
+  rowsEst().forEach(x => { const d = datosCert(x), p = promedio(x); rows.push([x.cedula, x.nombre, x.cargo, horas(totalSecs(x)), fdate(d.ini), fdate(d.fin), p == null ? '' : p.toFixed(1), [1, 2, 3, 4].filter(m => x.quiz[m] && x.quiz[m].passed).length + '/4', estado(x), x.aprobado ? 'Sí' : 'No', x.codigo, 'Mixta']); });
+  dl('reporte_capacitacion_' + today() + (DEMO ? '_ENSAYO' : '') + '.csv', '﻿' + rows.map(r => r.map(csvCell).join(';')).join('\r\n'), 'text/csv');
+}
+function viewConta() {
+  const all = rowsEst(), tot = all.reduce((a, x) => a + totalSecs(x), 0);
+  let h = '<div class="card"><h2>Resumen para el SUT (solo lectura)</h2><table><tr><th>Total de personas</th><td>' + all.length + '</td></tr><tr><th>Total de horas registradas</th><td>' + horas(tot) + '</td></tr><tr><th>Fechas programadas</th><td>' + fdate(SESSIONS[0]) + ' al ' + fdate(SESSIONS[19]) + '</td></tr><tr><th>Modalidad</th><td>Mixta</td></tr><tr><th>Temas</th><td>Derechos laborales de mujeres y hombres; igualdad de género; erradicación de violencia y no discriminación; trabajo de igual valor / equidad salarial</td></tr><tr><th>Completaron 40 h y 4 evaluaciones</th><td>' + all.filter(x => allDone(x)).length + '</td></tr></table>';
+  h += '<button onclick="csvConta()">Descargar resumen CSV</button></div><div class="card"><div class="scroll"><table><tr><th>Cédula</th><th>Nombre</th><th>Cargo</th><th>Horas</th><th>Estado</th></tr>' + all.map(x => '<tr><td>' + esc(x.cedula) + '</td><td>' + esc(x.nombre) + '</td><td>' + esc(x.cargo) + '</td><td>' + horas(totalSecs(x)) + '</td><td>' + estado(x) + '</td></tr>').join('') + '</table></div></div>';
+  return h;
+}
+function csvConta() {
+  const all = rowsEst(), tot = all.reduce((a, x) => a + totalSecs(x), 0);
+  const rows = [['RESUMEN SUT'], ['Asociación', ASOC], ['Total de personas', all.length], ['Total de horas', horas(tot)], ['Fechas', fdate(SESSIONS[0]) + ' al ' + fdate(SESSIONS[19])], ['Modalidad', 'Mixta'], ['Temas', 'Derechos laborales de mujeres y hombres; igualdad de género; erradicación de violencia y no discriminación; trabajo de igual valor / equidad salarial'], [], ['Cédula', 'Nombre', 'Cargo', 'Horas']];
+  all.forEach(x => rows.push([x.cedula, x.nombre, x.cargo, horas(totalSecs(x))]));
+  dl('resumen_SUT_' + today() + (DEMO ? '_ENSAYO' : '') + '.csv', '﻿' + rows.map(r => r.map(csvCell).join(';')).join('\r\n'), 'text/csv');
+}
+
+/* ===================== VIDEOS, RESPALDO ===================== */
+function viewVideos() {
+  let h = '<div class="card"><h2>Configuración de videos</h2><div class="msg warn">Ningún video está activo hasta que usted lo abra en YouTube, confirme que es de una fuente oficial ecuatoriana u organismo (Ministerio del Trabajo, OIT, ONU Mujeres) y marque “Verificado y activo”. Las lecciones sin video activo se hacen con lectura + actividad.</div></div>';
+  MODS.forEach(M => {
+    const c = videoCfg(M.id); h += '<div class="card"><h3>Módulo ' + M.id + '</h3><label>Enlace o ID de YouTube</label><input id="vi' + M.id + '" value="' + esc(c.id) + '"><label>Título exacto</label><input id="vt' + M.id + '" value="' + esc(c.titulo) + '"><label>Canal</label><input id="vc' + M.id + '" value="' + esc(c.canal) + '"><label>Duración</label><input id="vd' + M.id + '" value="' + esc(c.duracion) + '"><label><input type="checkbox" style="width:auto" id="va' + M.id + '" ' + (c.activo ? 'checked' : '') + '> Verificado y activo</label><p class="small">' + esc(M.video.nota) + '</p><button onclick="saveVideo(' + M.id + ')">Guardar módulo ' + M.id + '</button></div>';
+  });
+  return h;
+}
+function saveVideo(m) { const id = ytId(v('vi' + m)); const act = document.getElementById('va' + m).checked; if (act && !id) { alert('El enlace o ID de YouTube no es válido.'); return; } const cfg = { id: id, titulo: v('vt' + m), canal: v('vc' + m), duracion: v('vd' + m), activo: act }; db.settings.videos[m] = cfg; save(); enq({ t: 'video', m: m, cfg: cfg }); flush(); alert('Guardado.'); }
+function viewResp() {
+  return '<div class="card"><h2>Respaldo de datos</h2><p>Descargue el respaldo todos los días al terminar la sesión y guárdelo en un lugar seguro (por ejemplo, un correo o una memoria USB).</p><button onclick="backup()">Respaldar datos</button>' + (ONLINE ? '<p class="small">El registro oficial está en la hoja de Google Sheets. Este archivo es solo una copia adicional.</p>' : '<hr><p><b>Restaurar datos</b> (reemplaza TODO lo que hay en este equipo):</p><input type="file" accept=".json" id="rf"><button class="bad" onclick="restore()">Restaurar datos</button>') + '</div>';
+}
+function backup() { dl('respaldo_academia_luna_' + today() + (DEMO ? '_ENSAYO' : '') + '.json', JSON.stringify({ app: 'academia-luna', version: 1, exportado: new Date().toISOString(), db: db }), 'application/json'); }
+function restore() {
+  const f = document.getElementById('rf').files[0]; if (!f) { alert('Elige primero el archivo de respaldo.'); return; }
+  const r = new FileReader(); r.onload = e => { try { const j = JSON.parse(e.target.result); if (j.app !== 'academia-luna' || !j.db || !j.db.users) throw 0; if (!confirm('Esto reemplazará todos los datos de este equipo. ¿Continuar?')) return; db = j.db; db.settings = db.settings || { videos: {} }; db.forum = db.forum || []; db.att = db.att || {}; save(); alert('Datos restaurados. Vuelva a iniciar sesión.'); salir(); } catch (x) { alert('El archivo no es un respaldo válido.'); } }; r.readAsText(f);
+}
+render();
+if (ONLINE) { api('hasAdmin').then(r => { srvAdmin = !!r.hasAdmin; if (!me) render(); }).catch(() => { srvErr = true; if (!me) render(); }); }
+</script>
+</body>
+</html>
