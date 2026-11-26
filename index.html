@@ -293,8 +293,8 @@ const START = '2026-11-23';                                 // lunes (4 semanas 
 const MIN_LESSON = DEMO ? 1 : 120;                          // minutos reales mínimos por lección (2 h)
 const IDLE_MS = DEMO ? 30000 : 10 * 60 * 1000;              // 10 min sin interacción => pausa
 const LESSONS = ['Video', 'Lectura', 'Actividad', 'Foro', 'Evaluación'];
-const CARGOS = ['Administrador', 'Conserje', 'Limpieza', 'Jardinería', 'Seguridad', 'Presidente', 'Directivo', 'Contadora'];
-const ROLES = ['estudiante', 'administrador', 'contadora', 'presidente'];
+const CARGOS = ['Administrador', 'Conserje', 'Limpieza', 'Jardinería', 'Seguridad', 'Presidente', 'Directivo', 'Contadora', 'Asistente Contable'];
+const ROLES = ['estudiante', 'administrador', 'contadora', 'asistente contable', 'presidente'];
 const ASOC = 'Asociación de Residentes VillaClub - Etapa Luna Ala (La Aurora, Daule, Guayas)';
 const LEGAL = 'Esta plataforma registra tiempo real. La información reportada es de exclusiva responsabilidad del empleador según Art. 5 MDT-2025-006.';
 const MODS = CONTENIDO.modulos;
@@ -490,7 +490,7 @@ function go(v, o) {
   if (v !== 'leccion') stopLesson(); S = Object.assign({}, S, { v: v, m: 0, l: 0, msg: '' }, o || {}); render(); window.scrollTo(0, 0);
   if (ONLINE && me && v !== 'leccion' && v !== 'auth') {
     const adminView = ['admin', 'conta', 'acta', 'resp'].indexOf(v) >= 0, mine = ['home', 'modulo', 'cert'].indexOf(v) >= 0;
-    if (adminView && U() && ['administrador', 'presidente', 'contadora'].indexOf(U().rol) >= 0) refreshAll().then(() => { if (S.v === v && me) render(); });
+    if (adminView && U() && ['administrador', 'presidente', 'contadora', 'asistente contable'].indexOf(U().rol) >= 0) refreshAll().then(() => { if (S.v === v && me) render(); });
     else if (mine) refreshMe().then(() => { if (S.v === v && me && U()) render(); });
   }
 }
@@ -505,7 +505,7 @@ function render() {
 function header() {
   const u = U(); let n = '<button class="sec" onclick="go(\'home\')">Mi avance</button>';
   if (u.rol === 'administrador' || u.rol === 'presidente') n += '<button class="sec" onclick="go(\'admin\')">Panel de control</button>';
-  if (u.rol === 'administrador' || u.rol === 'contadora' || u.rol === 'presidente') n += '<button class="sec" onclick="go(\'conta\')">Resumen SUT</button>';
+  if (u.rol === 'administrador' || u.rol === 'contadora' || u.rol === 'asistente contable' || u.rol === 'presidente') n += '<button class="sec" onclick="go(\'conta\')">Resumen SUT</button>';
   if (u.rol === 'administrador') n += '<button class="sec" onclick="go(\'videos\')">Configuración de videos</button>';
   if (u.rol === 'administrador' || u.rol === 'presidente') n += '<button class="sec" onclick="go(\'resp\')">Respaldo</button>';
   n += '<button class="bad" onclick="salir()">Salir</button>';
@@ -572,7 +572,7 @@ async function login() {
       if (!r.ok) return bad(r.error || 'Cédula o contraseña incorrecta.');
       me = c; myHash = hh;
       if (queue.some(x => x.by === c)) { await flush(); const r2 = await api('me', { ced: c, hash: hh }); applyLogin(r2.ok ? r2 : r); } else applyLogin(r);
-      if (['administrador', 'presidente', 'contadora'].indexOf(r.user.rol) >= 0) await refreshAll();
+      if (['administrador', 'presidente', 'contadora', 'asistente contable'].indexOf(r.user.rol) >= 0) await refreshAll();
     } catch (e) { me = null; myHash = null; return bad('No hay conexión con el servidor. Revisa tu internet e intenta de nuevo.'); }
   } else {
     const u = db.users[c];
