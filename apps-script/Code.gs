@@ -136,7 +136,7 @@ function handle_(q) {
     }
     case 'all': {
       var ua = auth_(q);
-      if (['administrador', 'presidente', 'contadora'].indexOf(ua.rol) < 0) throw new Error('Sin permiso');
+      if (['administrador', 'presidente', 'contadora', 'asistente contable'].indexOf(ua.rol) < 0) throw new Error('Sin permiso');
       return { ok: true, usuarios: rows_('Usuarios').map(pub_), sesiones: rows_('Sesiones'), lecciones: rows_('Lecciones'), evaluaciones: rows_('Evaluaciones'), actividades: rows_('Actividades'), asistencia: rows_('Asistencia'), foro: rows_('Foro'), config: config_() };
     }
     case 'foro': { auth_(q); return { ok: true, foro: rows_('Foro') }; }
@@ -183,7 +183,7 @@ function apply_(u, ev, now) {
       return;
     case 'rol': {
       if (!admin) throw new Error('Solo el Administrador asigna roles');
-      if (['estudiante', 'administrador', 'contadora', 'presidente'].indexOf(ev.rol) < 0) throw new Error('Rol inválido');
+      if (['estudiante', 'administrador', 'contadora', 'asistente contable', 'presidente'].indexOf(ev.rol) < 0) throw new Error('Rol inválido');
       var us = rows_('Usuarios'), target = us.filter(function (r) { return r.cedula === String(ev.ced); })[0];
       if (!target) throw new Error('Usuario no existe');
       if (target.rol === 'administrador' && ev.rol !== 'administrador' && us.filter(function (r) { return r.rol === 'administrador'; }).length < 2) throw new Error('Debe quedar al menos un Administrador');
